@@ -33,3 +33,5 @@ ignore = [
     "S101", # ignore assert statements being used (for pytest)
 ]
 
+[tool.mypy]
+plugins = ['pydantic.mypy']
