@@ -1,4 +1,5 @@
-from typing import Literal, Any
+from typing import Any, Literal
+
 from .models import (
     DataSourceRequest,
     MessageChunkSSE,
@@ -7,6 +8,7 @@ from .models import (
     StatusUpdateSSEData,
     Widget,
 )
+
 
 def reasoning_step(
     event_type: Literal["INFO", "WARNING", "ERROR"],
@@ -21,8 +23,10 @@ def reasoning_step(
         )
     )
 
+
 def message_chunk(text: str) -> MessageChunkSSE:
     return MessageChunkSSE(data=MessageChunkSSEData(delta=text))
+
 
 def get_remote_data(
     widget: Widget,

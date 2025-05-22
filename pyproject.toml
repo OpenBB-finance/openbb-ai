@@ -20,3 +20,15 @@ build-backend = "poetry.core.masonry.api"
 mypy = "^1.15.0"
 ruff = "^0.11.10"
 
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle
+    "F", # pyflakes
+    "B", # flake8-bugbear
+    "I", # isort
+    "S", # security / flake8-bandit
+]
+ignore = [
+    "S101", # ignore assert statements being used (for pytest)
+]
+
