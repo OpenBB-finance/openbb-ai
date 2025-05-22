@@ -1,0 +1,17 @@
+[project]
+name = "openbb-ai"
+version = "0.0.1"
+description = "An SDK for building agents compatible with OpenBB Workspace"
+authors = [
+    {name = "Michael Struwig",email = "michael.struwig@openbb.finance"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic (>=2.11.4,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
