@@ -68,9 +68,7 @@ def message_chunk(text: str) -> MessageChunkSSE:
     return MessageChunkSSE(data=MessageChunkSSEData(delta=text))
 
 
-def get_remote_widget_data(
-    widget: Widget, input_arguments: dict[str, Any]
-) -> FunctionCallSSE:
+def get_widget_data(widget: Widget, input_arguments: dict[str, Any]) -> FunctionCallSSE:
     """Create a function call that retrieve data for a widget on the OpenBB Workspace
 
     The function call is typically `yield`ed to the client. After yielding this
