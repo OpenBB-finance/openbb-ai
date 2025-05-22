@@ -13,6 +13,8 @@ jobs:
       url: https://pypi.org/p/openbb-ai
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+      contents: read   # Required for checking out code
+      packages: read   # Required for installing dependencies
 
     steps:
       - name: Checkout code
