@@ -15,3 +15,23 @@ dependencies = [
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.15.0"
+ruff = "^0.11.10"
+pre-commit = "^4.2.0"
+
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle
+    "F", # pyflakes
+    "B", # flake8-bugbear
+    "I", # isort
+    "S", # security / flake8-bandit
+]
+ignore = [
+    "S101", # ignore assert statements being used (for pytest)
+]
+
+[tool.mypy]
+plugins = ['pydantic.mypy']

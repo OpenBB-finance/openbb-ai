@@ -1,16 +1,17 @@
+import json
+import uuid
+from enum import Enum
 from typing import Annotated, Any, AsyncGenerator, Callable, Literal
 from uuid import UUID
+
 from pydantic import (
     BaseModel,
     Field,
     HttpUrl,
+    computed_field,
     field_validator,
     model_validator,
-    computed_field,
 )
-from enum import Enum
-import json
-import uuid
 
 EXCLUDE_CITATION_DETAILS_FIELDS = [
     "lastupdated",
@@ -450,14 +451,18 @@ class StatusUpdateSSE(BaseSSE):
     event: Literal["copilotStatusUpdate"] = "copilotStatusUpdate"
     data: StatusUpdateSSEData
 
+
 class LocalFunctionCall:
     def __init__(self, function: Callable, **kwargs):
         self.function = function
         self.kwargs = kwargs
 
-    async def __call__(self) -> AsyncGenerator[FunctionCallSSE | StatusUpdateSSE | str, None]:
+    async def __call__(
+        self,
+    ) -> AsyncGenerator[FunctionCallSSE | StatusUpdateSSE | str, None]:
         async for event in self.function(**self.kwargs):
             yield event
+
 
 class StreamedText:
     def __init__(self, stream: AsyncGenerator[str, None]):
