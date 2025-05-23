@@ -2,12 +2,14 @@ import json
 import uuid
 from enum import Enum
 from typing import Annotated, Any, AsyncGenerator, Callable, Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
+import xxhash
 from pydantic import (
     BaseModel,
     Field,
     HttpUrl,
+    ValidationError,
     computed_field,
     field_validator,
     model_validator,
@@ -28,6 +30,12 @@ EXCLUDE_CITATION_DETAILS_FIELDS = [
 ]
 
 
+class UserAPIKeys(BaseModel):
+    openai_api_key: str | None = Field(
+        default=None, description="Use a custom OpenAI API key for the request."
+    )
+
+
 class Pdf(BaseModel):
     filename: str
     content: bytes
@@ -39,10 +47,51 @@ class RoleEnum(str, Enum):
     tool = "tool"
 
 
-class ChartParameters(BaseModel):
-    chartType: Literal["line", "bar", "scatter"]
-    xKey: str
-    yKey: list[str]
+class LineChartParameters(BaseModel):
+    chartType: Literal["line"]
+    xKey: str = Field(description="The key of the x-axis variable.")
+    yKey: list[str] = Field(description="The key (or keys) of the y-axis variables.")
+
+
+class BarChartParameters(BaseModel):
+    chartType: Literal["bar"]
+    xKey: str = Field(description="The key of the x-axis variable.")
+    yKey: list[str] = Field(description="The key (or keys) of the y-axis variables.")
+
+
+class ScatterChartParameters(BaseModel):
+    chartType: Literal["scatter"]
+    xKey: str = Field(
+        description="The key of the x-axis variable. Only numerical variables can be provided for a scatter plot."  # noqa: E501
+    )
+    yKey: list[str] = Field(
+        description="The key (or keys) of the y-axis variables. Only numerical variables can be provided for a scatter plot."  # noqa: E501
+    )
+
+
+class PieChartParameters(BaseModel):
+    chartType: Literal["pie"]
+    angleKey: str = Field(description="Angle of each pie sector.")
+    calloutLabelKey: str = Field(
+        description="Names of the variable used for the callout labels."
+    )
+
+
+class DonutChartParameters(BaseModel):
+    chartType: Literal["donut"]
+    angleKey: str = Field(description="Angle of each pie sector.")
+    calloutLabelKey: str = Field(
+        description="Names of the variable used for the callout labels."
+    )
+
+
+ChartParameters = (
+    LineChartParameters
+    | BarChartParameters
+    | ScatterChartParameters
+    | PieChartParameters
+    | DonutChartParameters
+)
 
 
 class RawObjectDataFormat(BaseModel):
@@ -69,9 +118,35 @@ class ImageDataFormat(BaseModel):
     filename: str
 
 
+class SpreadsheetDataFormat(BaseModel):
+    data_type: Literal["xlsx", "xls", "csv"]
+    parse_as: Literal["text", "table"] = "table"
+    filename: str
+
+
+class PlaintextDataFormat(BaseModel):
+    data_type: Literal["txt", "md"]
+    parse_as: Literal["text"] = "text"
+    filename: str
+
+
+class DocxDataFormat(BaseModel):
+    data_type: Literal["docx"]
+    filename: str
+
+
+DataFileFormat = Annotated[
+    PdfDataFormat
+    | ImageDataFormat
+    | SpreadsheetDataFormat
+    | PlaintextDataFormat
+    | DocxDataFormat,
+    Field(discriminator="data_type"),
+]
+
 # Discriminated union of data formats
 DataFormat = Annotated[
-    RawObjectDataFormat | PdfDataFormat | ImageDataFormat,
+    RawObjectDataFormat | DataFileFormat,
     Field(discriminator="data_type", default_factory=RawObjectDataFormat),
 ]
 
@@ -116,14 +191,27 @@ class Citation(BaseModel):
         description="Bounding boxes for the highlights in the citation.",
     )
 
+    def __hash__(self) -> int:
+        return hash((str(self.source_info), str(self.details)))
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Citation):
+            return False
+        if not self.signature or not other.signature:
+            return False
+        return self.signature == other.signature
+
     @computed_field  # type: ignore[misc]
     @property
     def signature(self) -> str | None:
         try:
             if self.source_info.type == "widget":
                 metadata = self.source_info.metadata or {}
-                origin = self.source_info.origin or "unknown"
-                widget_id = self.source_info.widget_id or "unknown"
+                random_uuid = uuid4().hex[:8]
+                origin = self.source_info.origin or f"unknown-origin-{random_uuid}"
+                widget_id = (
+                    self.source_info.widget_id or f"unknown-widget_id-{random_uuid}"
+                )
                 args = [
                     f"{str(k)}={str(v)}"
                     for k, v in metadata.get("input_args", {}).items()
@@ -158,18 +246,37 @@ class Citation(BaseModel):
         return values
 
 
-class LlmFunctionCall(BaseModel):
-    function: str
-    input_arguments: dict[str, Any]
+class Undefined(str, Enum):
+    UNDEFINED = "<<UNDEFINED>>"
 
 
-class Undefined:
-    pass
+class OptionsEndpointParam(BaseModel):
+    type: str | None = Field(default=None, description="Type of the options parameter.")
+    name: str = Field(description="Name of the options parameter.")
+    description: str | None = Field(
+        default=None, description="Description of the options parameter."
+    )
+    # For now, we MUST inherit option param values from user parameters.
+    inherit_value_from: str = Field(
+        description="Name of the user parameter that this parameter inherits its values from."  # noqa: E501
+    )
+
+    @model_validator(mode="after")
+    @classmethod
+    def validate_type_given_inherit_value_from(cls, data: Any):
+        # We set the type of the options parameter to the type of the user
+        # parameter that it inherits from if inherit_value_from is set.
+        if data.type is None and data.inherit_value_from is not None:
+            data.type = data.inherit_value_from
+            raise ValueError("Type must be set if inherit_value_from is not set.")
+        return data
 
 
 class WidgetParam(BaseModel):
     name: str = Field(description="Name of the parameter.")
-    type: str = Field(description="Type of the parameter.")
+    type: Literal[
+        "string", "text", "number", "integer", "boolean", "date", "ticker", "endpoint"
+    ] = Field(description="Type of the parameter.")
     description: str = Field(description="Description of the parameter.")
     default_value: Any | None = Field(
         default=None, description="Default value of the parameter."
@@ -178,8 +285,24 @@ class WidgetParam(BaseModel):
         default=None,
         description="Current value of the parameter. Must not be set for 'extra' widgets.",  # noqa: E501
     )
+    multi_select: bool = Field(
+        default=False,
+        description="Set True to allow multiple values for the parameter.",
+    )
+    split_param_on_citation: bool = Field(
+        default=False,
+        description="Set True to split the each parameter value into a separate citation. Only works if `multi_select` is True.",  # noqa: E501
+    )
     options: list[Any] | None = Field(
         default=None, description="Optional list of values for enumerations."
+    )
+    get_options: bool = Field(
+        default=False,
+        description="Set True to get options for the parameter dynamically. Requires an `optionsEndpoint` definition for the data source.",  # noqa: E501
+    )
+    options_params: list[OptionsEndpointParam] = Field(
+        default_factory=list,
+        description="A list of parameters to pass to the options endpoint.",
     )
 
     @model_validator(mode="before")
@@ -189,13 +312,25 @@ class WidgetParam(BaseModel):
         # explicitly set default value of None.  There is a difference between
         # my_function(param=None) and my_function(param).
         if "default_value" not in data:
-            data["default_value"] = Undefined
+            data["default_value"] = Undefined.UNDEFINED
         return data
+
+
+class WidgetParamOption(BaseModel):
+    label: str
+    value: str
+
+
+class WidgetParamOptions(BaseModel):
+    widget_origin: str
+    widget_id: str
+    param_name: str
+    options: list[WidgetParamOption] = Field(default_factory=list)
 
 
 class Widget(BaseModel):
     uuid: UUID = Field(
-        description="UUID of the widget. Used by Copilot to identify widgets. Only used internally.",  # noqa: E501
+        description="UUID of the widget. Used to identify widgets present on the dashboard. If an `extra` widget, this will be generated.",  # noqa: E501
         default_factory=uuid.uuid4,
     )
     origin: str = Field(description="Origin of the widget.")
@@ -204,31 +339,82 @@ class Widget(BaseModel):
     description: str = Field(description="Description of the widget.")
     params: list[WidgetParam] = Field(description="List of parameters for the widget.")
     metadata: dict[str, Any] = Field(
-        description="Metadata for the widget, must not overlap with current_params."
+        default_factory=dict,
+        description="Metadata for the widget, must not overlap with current_params.",
     )
 
+    @staticmethod
+    def _generate_uuid(origin: str, widget_id: str) -> UUID:
+        """Generate a UUID for the widget based on its origin and widget_id."""
+        seed = f"origin={origin}&widget_id={widget_id}"
+        hash_value = xxhash.xxh64(seed.encode()).hexdigest()
+        # Multiply by 2 because xxh64 returns
+        # 64 bits -> 8 bytes -> 16 hexadecimal digits
+        # and UUID hex requires 32 hexadecimal digits
+        namespace = hash_value[:16] * 2
+        return UUID(hex=namespace)
 
-class LlmClientMessage(BaseModel):
-    role: RoleEnum = Field(
-        description="The role of the entity that is creating the message"
-    )
-    content: str | LlmFunctionCall = Field(
-        description="The content of the message or the result of a function call."
-    )
+    @computed_field  # type: ignore[misc]
+    @property
+    def split_param(self) -> WidgetParam | None:
+        for param in self.params:
+            if param.split_param_on_citation:
+                return param
+        return None
 
-    @field_validator("content", mode="before", check_fields=False)
-    def parse_content(cls, v):
-        if isinstance(v, str):
-            try:
-                parsed_content = json.loads(v)
-                if isinstance(parsed_content, str):
-                    # Sometimes we need a second decode if the content is
-                    # escaped and string-encoded
-                    parsed_content = json.loads(parsed_content)
-                return LlmFunctionCall(**parsed_content)
-            except (json.JSONDecodeError, TypeError, ValueError):
-                return v
-        return v
+    @model_validator(mode="before")
+    @classmethod
+    def generate_deterministic_uuid_if_none(cls, data: dict) -> dict:
+        if data.get("uuid") is None:
+            origin = data.get("origin")
+            widget_id = data.get("widget_id")
+            if origin and widget_id:
+                data["uuid"] = cls._generate_uuid(origin, widget_id)
+                return data
+        return data
+
+    @model_validator(mode="after")
+    @classmethod
+    def check_params_are_unique(cls, data: Any):
+        param_names = [p.name for p in data.params]
+        if len(param_names) != len(set(param_names)):
+            raise ValidationError("Parameter names must be unique.")
+        return data
+
+    @model_validator(mode="after")
+    @classmethod
+    def check_only_one_split_param_on_citation(cls, data: Any):
+        is_split_param_on_citation_set = False
+        for widget_param in data.params:
+            if widget_param.split_param_on_citation:
+                if is_split_param_on_citation_set:
+                    raise ValidationError(
+                        "Only one parameter can be split on citation."
+                    )
+                is_split_param_on_citation_set = True
+        return data
+
+    @model_validator(mode="after")
+    @classmethod
+    def handle_inherit_value_from_options_params(cls, data: Any):
+        for widget_param in data.params:
+            if widget_param.get_options:
+                for options_param in widget_param.options_params:
+                    if options_param.inherit_value_from not in [
+                        p.name for p in data.params
+                    ]:
+                        raise ValidationError(
+                            f"Parameter {options_param.inherit_value_from} not found in options, but {widget_param.name}'s options endpoint depends on it."  # noqa: E501
+                        )
+                    else:
+                        # Find the referenced param and set the type to match
+                        referenced_param = next(
+                            p
+                            for p in data.params
+                            if p.name == options_param.inherit_value_from
+                        )
+                        options_param.type = referenced_param.type
+        return data
 
 
 class WidgetCollection(BaseModel):
@@ -242,6 +428,34 @@ class WidgetCollection(BaseModel):
     extra: list[Widget] = Field(
         default_factory=list, description="Extra data sources or custom backends."
     )
+
+
+class LlmClientFunctionCall(BaseModel):
+    function: str
+    input_arguments: dict[str, Any]
+
+
+class LlmClientMessage(BaseModel):
+    role: RoleEnum = Field(
+        description="The role of the entity that is creating the message"
+    )
+    content: str | LlmClientFunctionCall = Field(
+        description="The content of the message or the result of a function call."
+    )
+
+    @field_validator("content", mode="before", check_fields=False)
+    def parse_content(cls, v):
+        if isinstance(v, str):
+            try:
+                parsed_content = json.loads(v)
+                if isinstance(parsed_content, str):
+                    # Sometimes we need a second decode if the content is
+                    # escaped and string-encoded
+                    parsed_content = json.loads(parsed_content)
+                return LlmClientFunctionCall(**parsed_content)
+            except (json.JSONDecodeError, TypeError, ValueError):
+                return v
+        return v
 
 
 class SingleFileReference(BaseModel):
@@ -326,23 +540,60 @@ class RawContext(BaseModel):
 LlmMessage = LlmClientFunctionCallResultMessage | LlmClientMessage
 
 
+class DataSourceRequestPayload(BaseModel):
+    widget_uuid: str
+    origin: str
+    id: str
+    input_args: dict[str, Any]
+
+
+class DataSourceParamOptionsRequestPayload(BaseModel):
+    origin: str = Field(description="The origin of the data source.")
+    id: str = Field(description="The widget id of the data source.")
+    param: str = Field(description="The parameter to get options for.")
+    options_endpoint_input_args: dict[str, Any] = Field(
+        description="A dictionary of input arguments to pass to the options endpoint."
+    )
+
+
 class QueryRequest(BaseModel):
-    messages: list[LlmMessage] = Field(
+    messages: list[LlmClientFunctionCallResultMessage | LlmClientMessage] = Field(
         description="A list of messages to submit to the copilot."
     )
     context: list[RawContext] | None = Field(
         default=None, description="Additional context."
     )
-    widgets: WidgetCollection = Field(
-        default_factory=WidgetCollection,
+    widgets: WidgetCollection | None = Field(
+        default=None,
         description="A dictionary containing primary, secondary, and extra widgets.",
     )
+    urls: list[str] | None = Field(
+        default=None,
+        description="URLs to retrieve and use as context. Limited to 4 URLs.",
+    )
+    api_keys: UserAPIKeys | None = Field(
+        default=None, description="Use custom API keys for the request."
+    )
+    force_web_search: bool | None = Field(
+        default=None,
+        description="Set True to force a web search.",
+    )
+    timezone: str = Field(
+        default="UTC",
+        description="The timezone to use for the request.",
+        examples=["UTC", "America/New_York", "Europe/London", "Asia/Tokyo"],
+    )
 
-    @field_validator("messages")
-    @classmethod
+    @field_validator("messages", mode="before", check_fields=False)
     def check_messages_not_empty(cls, value):
         if not value:
             raise ValueError("messages list cannot be empty.")
+        return value
+
+    @field_validator("urls", mode="before", check_fields=False)
+    def check_num_urls_within_limit(cls, value):
+        if value and len(value) > 4:
+            raise ValueError("urls list cannot have more than 4 elements.")
         return value
 
 
@@ -362,6 +613,25 @@ class FunctionCallResponse(BaseModel):
         default=None,
         description="Extra state to be passed between the client and this service.",
     )
+
+
+class ClientArtifact(BaseModel):
+    """A piece of output data that is returned to the client."""
+
+    type: Literal["text", "table", "chart"]
+    name: str
+    description: str
+    uuid: UUID = Field(default_factory=uuid.uuid4)
+    content: str | list[dict]
+    chart_params: ChartParameters | None = None
+
+    @model_validator(mode="after")
+    def check_chart_params(cls, values):
+        if values.type == "chart" and not values.chart_params:
+            raise ValueError("chart_params is required for type 'chart'")
+        if values.type != "chart" and values.chart_params:
+            raise ValueError("chart_params is only allowed for type 'chart'")
+        return values
 
 
 class BaseSSE(BaseModel):
@@ -384,10 +654,18 @@ class MessageChunkSSE(BaseSSE):
     data: MessageChunkSSEData
 
 
+class MessageArtifactSSE(BaseSSE):
+    event: Literal["copilotMessageArtifact"] = "copilotMessageArtifact"
+    data: ClientArtifact
+
+
 class FunctionCallSSEData(BaseModel):
-    function: Literal["get_widget_data"]
+    function: Literal["get_widget_data", "get_extra_widget_data", "get_params_options"]
     input_arguments: dict
-    extra_state: dict | None = None
+    extra_state: dict | None = Field(
+        default=None,
+        description="Extra state to be passed between the client and this service.",
+    )
 
 
 class FunctionCallSSE(BaseSSE):
@@ -406,31 +684,13 @@ class CitationCollectionSSE(BaseSSE):
     data: CitationCollection
 
 
-class ClientArtifact(BaseModel):
-    """A piece of output data that is returned to the client."""
-
-    type: Literal["text", "table", "chart"]
-    name: str
-    description: str
-    uuid: UUID = Field(default_factory=uuid.uuid4)
-    content: str | list[dict]
-    chart_params: ChartParameters | None = None
-
-    @model_validator(mode="after")
-    def check_chart_params(cls, values):
-        if values.type == "chart" and not values.chart_params:
-            raise ValueError("chart_params is required for type 'chart'")
-        if values.type != "chart" and values.chart_params:
-            raise ValueError("chart_params is only allowed for type 'chart'")
-        return values
-
-
 class StatusUpdateSSEData(BaseModel):
     eventType: Literal["INFO", "WARNING", "ERROR"]
     message: str
     group: Literal["reasoning"] = "reasoning"
     details: list[dict[str, Any]] | None = None
     artifacts: list[ClientArtifact] | None = None
+    hidden: bool = False
 
     @model_validator(mode="before")
     @classmethod
@@ -450,6 +710,15 @@ class StatusUpdateSSEData(BaseModel):
 class StatusUpdateSSE(BaseSSE):
     event: Literal["copilotStatusUpdate"] = "copilotStatusUpdate"
     data: StatusUpdateSSEData
+
+
+SSE = (
+    MessageChunkSSE
+    | MessageArtifactSSE
+    | FunctionCallSSE
+    | StatusUpdateSSE
+    | CitationCollectionSSE
+)
 
 
 class LocalFunctionCall:

@@ -18,3 +18,5 @@ repos:
         args: ["."]
         pass_filenames: false      
         exclude: "^tests/"
+        additional_dependencies:
+          - pydantic
