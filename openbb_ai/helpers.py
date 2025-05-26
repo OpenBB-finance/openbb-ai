@@ -8,7 +8,7 @@ from .models import (
     MessageChunkSSEData,
     StatusUpdateSSE,
     StatusUpdateSSEData,
-    Widget,
+    WidgetRequest,
 )
 
 
@@ -68,7 +68,7 @@ def message_chunk(text: str) -> MessageChunkSSE:
     return MessageChunkSSE(data=MessageChunkSSEData(delta=text))
 
 
-def get_widget_data(widget: Widget, input_arguments: dict[str, Any]) -> FunctionCallSSE:
+def get_widget_data(widget_requests: list[WidgetRequest]) -> FunctionCallSSE:
     """Create a function call that retrieve data for a widget on the OpenBB Workspace
 
     The function call is typically `yield`ed to the client. After yielding this
@@ -77,28 +77,31 @@ def get_widget_data(widget: Widget, input_arguments: dict[str, Any]) -> Function
 
     Parameters
     ----------
-    widget: Widget
-        The widget to retrieve data for.
-    input_arguments: dict[str, Any]
-        The input arguments to pass to the widget.
+    widget_requests: list[WidgetRequest]
+        A list of widget requests, where each request contains:
+        - widget: A Widget instance defining the widget configuration
+        - input_arguments: A dictionary of input parameters required by the widget
 
     Returns
     -------
     FunctionCallSSE
         The function call SSE.
     """
+
+    data_sources: list[DataSourceRequest] = []
+    for widget_request in widget_requests:
+        data_sources.append(
+            DataSourceRequest(
+                widget_uuid=str(widget_request.widget.uuid),
+                origin=widget_request.widget.origin,
+                id=widget_request.widget.widget_id,
+                input_args=widget_request.input_arguments,
+            )
+        )
+
     return FunctionCallSSE(
         data=FunctionCallSSEData(
             function="get_widget_data",
-            input_arguments={
-                "data_sources": [
-                    DataSourceRequest(
-                        widget_uuid=str(widget.uuid),
-                        origin=widget.origin,
-                        id=widget.widget_id,
-                        input_args=input_arguments,
-                    )
-                ],
-            },
+            input_arguments={"data_sources": data_sources},
         )
     )
