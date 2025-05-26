@@ -742,3 +742,8 @@ class StreamedText:
         async for chunk in self.stream:
             self.cached_stream += chunk
             yield chunk
+
+
+class WidgetRequest(BaseModel):
+    widget: Widget
+    input_arguments: dict[str, Any]
