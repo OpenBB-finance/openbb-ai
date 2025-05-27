@@ -13,8 +13,8 @@ from .models import (
 
 
 def reasoning_step(
-    event_type: Literal["INFO", "WARNING", "ERROR"],
     message: str,
+    event_type: Literal["INFO", "WARNING", "ERROR"] = "INFO",
     details: dict[str, Any] | None = None,
 ) -> StatusUpdateSSE:
     """Create a reasoning step (also known as a status update) SSE.
@@ -26,12 +26,14 @@ def reasoning_step(
 
     Parameters
     ----------
-    event_type: Literal["INFO", "WARNING", "ERROR"]
-        The type of event to create.
     message: str
         The message to display.
-    details: dict[str, Any] | None = None
+    event_type: Literal["INFO", "WARNING", "ERROR"]
+        The type of event to create.
+        Default is "INFO".
+    details: dict[str, Any] | None
         Additional details to display.
+        Default is None.
 
     Returns
     -------
