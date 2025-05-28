@@ -1,3 +1,4 @@
+from .helpers import chart as chart
 from .helpers import citations as citations
 from .helpers import cite as cite
 from .helpers import get_widget_data as get_widget_data
