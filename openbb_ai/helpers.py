@@ -223,6 +223,7 @@ def chart(
 
     Examples
     --------
+    >>> # Create a line chart
     >>> chart(
     ...     type="line",
     ...     data=[
@@ -233,6 +234,21 @@ def chart(
     ...     ],
     ...     x_key="x",
     ...     y_keys=["y"],
+    ...     name="My Chart",
+    ...     description="This is a chart of the data",
+    ... )
+
+    >>> # Create a pie chart
+    >>> chart(
+    ...     type="pie",
+    ...     data=[
+    ...         {"amount": 1, "category": "A"},
+    ...         {"amount": 2, "category": "B"},
+    ...         {"amount": 3, "category": "C"},
+    ...         {"amount": 4, "category": "D"},
+    ...     ],
+    ...     angle_key="amount",
+    ...     callout_label_key="category",
     ...     name="My Chart",
     ...     description="This is a chart of the data",
     ... )
