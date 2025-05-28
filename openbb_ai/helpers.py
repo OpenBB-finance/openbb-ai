@@ -1,14 +1,22 @@
 from typing import Any, Literal
 
 from .models import (
+    BarChartParameters,
+    ChartParameters,
     Citation,
     CitationCollection,
     CitationCollectionSSE,
+    ClientArtifact,
     DataSourceRequest,
+    DonutChartParameters,
     FunctionCallSSE,
     FunctionCallSSEData,
+    LineChartParameters,
+    MessageArtifactSSE,
     MessageChunkSSE,
     MessageChunkSSEData,
+    PieChartParameters,
+    ScatterChartParameters,
     SourceInfo,
     StatusUpdateSSE,
     StatusUpdateSSEData,
@@ -125,7 +133,7 @@ def cite(
     ----------
     widget: Widget
         The widget to cite. Typically retrieved from the `QueryRequest` object.
-    input_arguments: dict[str, Any] | None
+    input_arguments: dict[str, Any]
         The input arguments used to retrieve data from the widget.
     extra_details: dict[str, Any] | None
         Extra details to display in the citation.
@@ -170,3 +178,128 @@ def citations(citations: list[Citation]) -> CitationCollectionSSE:
         The citation collection SSE.
     """
     return CitationCollectionSSE(data=CitationCollection(citations=citations))
+
+
+def chart(
+    type: Literal["line", "bar", "scatter", "pie", "donut"],
+    data: list[dict],
+    x_key: str | None = None,
+    y_keys: list[str] | None = None,
+    angle_key: str | None = None,
+    callout_label_key: str | None = None,
+    name: str | None = None,
+    description: str | None = None,
+) -> MessageArtifactSSE:
+    """
+    Create a chart message artifact SSE.
+
+    This function constructs a chart artifact, which can be `yield`ed to the
+    client to display various types of charts (line, bar, scatter, pie, donut)
+    as streamed in-line agent output in OpenBB Workspace.
+
+    Parameters
+    ----------
+    type : Literal["line", "bar", "scatter", "pie", "donut"]
+        The type of chart to create.
+    data : list[dict]
+        The data to be visualized in the chart. Each dictionary represents a
+        data point, where keys represent the "columns" of the data.
+    x_key : str | None
+        The key in the data dictionaries to use for the x-axis (for line, bar,
+        scatter charts).
+    y_keys : list[str] | None
+        The keys in the data dictionaries to use for the y-axis (for line, bar,
+        scatter charts).
+    angle_key : str | None
+        The key in the data dictionaries to use for the angle of each sector
+        (for pie, donut charts).
+    callout_label_key : str | None
+        The key in the data dictionaries to use for the callout labels (for pie,
+        donut charts).
+    name : str | None
+        The name of the chart. Optional, but recommended.
+    description : str | None
+        A description of the chart. Optional, but recommended.
+
+    Examples
+    --------
+    >>> # Create a line chart
+    >>> chart(
+    ...     type="line",
+    ...     data=[
+    ...         {"x": 1, "y": 2},
+    ...         {"x": 2, "y": 3},
+    ...         {"x": 3, "y": 4},
+    ...         {"x": 4, "y": 5},
+    ...     ],
+    ...     x_key="x",
+    ...     y_keys=["y"],
+    ...     name="My Chart",
+    ...     description="This is a chart of the data",
+    ... )
+
+    >>> # Create a pie chart
+    >>> chart(
+    ...     type="pie",
+    ...     data=[
+    ...         {"amount": 1, "category": "A"},
+    ...         {"amount": 2, "category": "B"},
+    ...         {"amount": 3, "category": "C"},
+    ...         {"amount": 4, "category": "D"},
+    ...     ],
+    ...     angle_key="amount",
+    ...     callout_label_key="category",
+    ...     name="My Chart",
+    ...     description="This is a chart of the data",
+    ... )
+
+    Returns
+    -------
+    MessageArtifactSSE
+        The chart artifact to be sent to the client.
+    """
+
+    parameters: ChartParameters | None = None
+    match type:
+        case "line":
+            parameters = LineChartParameters(
+                chartType=type,
+                xKey=x_key,
+                yKey=y_keys,
+            )
+        case "bar":
+            parameters = BarChartParameters(
+                chartType=type,
+                xKey=x_key,
+                yKey=y_keys,
+            )
+        case "scatter":
+            parameters = ScatterChartParameters(
+                chartType=type,
+                xKey=x_key,
+                yKey=y_keys,
+            )
+        case "pie":
+            parameters = PieChartParameters(
+                chartType=type,
+                angleKey=angle_key,
+                calloutLabelKey=callout_label_key,
+            )
+        case "donut":
+            parameters = DonutChartParameters(
+                chartType=type,
+                angleKey=angle_key,
+                calloutLabelKey=callout_label_key,
+            )
+        case _:
+            raise ValueError(f"Invalid chart type: {type}")
+
+    return MessageArtifactSSE(
+        data=ClientArtifact(
+            type="chart",
+            name=name or f"{type} chart",
+            description=description or f"A {type} chart of data",
+            content=data,
+            chart_params=parameters,
+        )
+    )
