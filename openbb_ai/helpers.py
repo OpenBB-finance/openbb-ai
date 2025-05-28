@@ -191,7 +191,7 @@ def chart(
     description: str | None = None,
 ) -> MessageArtifactSSE:
     """
-    Create a chart artifact for the client.
+    Create a chart message artifact SSE.
 
     This function constructs a chart artifact, which can be `yield`ed to the
     client to display various types of charts (line, bar, scatter, pie, donut)
