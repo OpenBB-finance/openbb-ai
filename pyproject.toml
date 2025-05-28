@@ -1,6 +1,6 @@
 [project]
 name = "openbb-ai"
-version = "1.2.0"
+version = "1.2.1"
 description = "An SDK for building agents compatible with OpenBB Workspace"
 authors = [
     {name = "Michael Struwig",email = "michael.struwig@openbb.finance"}
