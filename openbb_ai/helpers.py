@@ -12,6 +12,7 @@ from .models import (
     FunctionCallSSE,
     FunctionCallSSEData,
     LineChartParameters,
+    MessageArtifactSSE,
     MessageChunkSSE,
     MessageChunkSSEData,
     PieChartParameters,
@@ -188,14 +189,13 @@ def chart(
     callout_label_key: str | None = None,
     name: str | None = None,
     description: str | None = None,
-) -> ClientArtifact:
+) -> MessageArtifactSSE:
     """
     Create a chart artifact for the client.
 
     This function constructs a chart artifact, which can be `yield`ed to the
     client to display various types of charts (line, bar, scatter, pie, donut)
-    in OpenBB Workspace. The chart is defined by its type and the relevant data
-    and parameters required for rendering.
+    as streamed in-line agent output in OpenBB Workspace.
 
     Parameters
     ----------
@@ -239,7 +239,7 @@ def chart(
 
     Returns
     -------
-    ClientArtifact
+    MessageArtifactSSE
         The chart artifact to be sent to the client.
     """
 
@@ -278,10 +278,12 @@ def chart(
         case _:
             raise ValueError(f"Invalid chart type: {type}")
 
-    return ClientArtifact(
-        type="chart",
-        name=name or f"{type} chart",
-        description=description or f"A {type} chart of data",
-        content=data,
-        chart_params=parameters,
+    return MessageArtifactSSE(
+        data=ClientArtifact(
+            type="chart",
+            name=name or f"{type} chart",
+            description=description or f"A {type} chart of data",
+            content=data,
+            chart_params=parameters,
+        )
     )

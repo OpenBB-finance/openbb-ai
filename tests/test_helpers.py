@@ -1,5 +1,5 @@
 from openbb_ai.helpers import chart
-from openbb_ai.models import ClientArtifact
+from openbb_ai.models import ClientArtifact, MessageArtifactSSE
 
 
 def test_chart_line():
@@ -12,13 +12,14 @@ def test_chart_line():
         description="This is a line chart of the data",
     )
 
-    assert isinstance(result, ClientArtifact)
-    assert result.type == "chart"
-    assert result.chart_params.chartType == "line"
-    assert result.chart_params.xKey == "x"
-    assert result.chart_params.yKey == ["y"]
-    assert result.name == "My Line Chart"
-    assert result.description == "This is a line chart of the data"
+    assert isinstance(result, MessageArtifactSSE)
+    assert isinstance(result.data, ClientArtifact)
+    assert result.data.type == "chart"
+    assert result.data.chart_params.chartType == "line"
+    assert result.data.chart_params.xKey == "x"
+    assert result.data.chart_params.yKey == ["y"]
+    assert result.data.name == "My Line Chart"
+    assert result.data.description == "This is a line chart of the data"
 
 
 def test_chart_bar():
@@ -31,13 +32,14 @@ def test_chart_bar():
         description="This is a bar chart of the data",
     )
 
-    assert isinstance(result, ClientArtifact)
-    assert result.type == "chart"
-    assert result.chart_params.chartType == "bar"
-    assert result.chart_params.xKey == "x"
-    assert result.chart_params.yKey == ["y"]
-    assert result.name == "My Bar Chart"
-    assert result.description == "This is a bar chart of the data"
+    assert isinstance(result, MessageArtifactSSE)
+    assert isinstance(result.data, ClientArtifact)
+    assert result.data.type == "chart"
+    assert result.data.chart_params.chartType == "bar"
+    assert result.data.chart_params.xKey == "x"
+    assert result.data.chart_params.yKey == ["y"]
+    assert result.data.name == "My Bar Chart"
+    assert result.data.description == "This is a bar chart of the data"
 
 
 def test_chart_scatter():
@@ -50,13 +52,14 @@ def test_chart_scatter():
         description="This is a scatter chart of the data",
     )
 
-    assert isinstance(result, ClientArtifact)
-    assert result.type == "chart"
-    assert result.chart_params.chartType == "scatter"
-    assert result.chart_params.xKey == "x"
-    assert result.chart_params.yKey == ["y"]
-    assert result.name == "My Scatter Chart"
-    assert result.description == "This is a scatter chart of the data"
+    assert isinstance(result, MessageArtifactSSE)
+    assert isinstance(result.data, ClientArtifact)
+    assert result.data.type == "chart"
+    assert result.data.chart_params.chartType == "scatter"
+    assert result.data.chart_params.xKey == "x"
+    assert result.data.chart_params.yKey == ["y"]
+    assert result.data.name == "My Scatter Chart"
+    assert result.data.description == "This is a scatter chart of the data"
 
 
 def test_chart_pie():
@@ -74,13 +77,14 @@ def test_chart_pie():
         description="This is a pie chart of the data",
     )
 
-    assert isinstance(result, ClientArtifact)
-    assert result.type == "chart"
-    assert result.chart_params.chartType == "pie"
-    assert result.chart_params.angleKey == "x"
-    assert result.chart_params.calloutLabelKey == "y"
-    assert result.name == "My Pie Chart"
-    assert result.description == "This is a pie chart of the data"
+    assert isinstance(result, MessageArtifactSSE)
+    assert isinstance(result.data, ClientArtifact)
+    assert result.data.type == "chart"
+    assert result.data.chart_params.chartType == "pie"
+    assert result.data.chart_params.angleKey == "x"
+    assert result.data.chart_params.calloutLabelKey == "y"
+    assert result.data.name == "My Pie Chart"
+    assert result.data.description == "This is a pie chart of the data"
 
 
 def test_chart_donut():
@@ -98,10 +102,11 @@ def test_chart_donut():
         description="This is a donut chart of the data",
     )
 
-    assert isinstance(result, ClientArtifact)
-    assert result.type == "chart"
-    assert result.chart_params.chartType == "donut"
-    assert result.chart_params.angleKey == "x"
-    assert result.chart_params.calloutLabelKey == "y"
-    assert result.name == "My Donut Chart"
-    assert result.description == "This is a donut chart of the data"
+    assert isinstance(result, MessageArtifactSSE)
+    assert isinstance(result.data, ClientArtifact)
+    assert result.data.type == "chart"
+    assert result.data.chart_params.chartType == "donut"
+    assert result.data.chart_params.angleKey == "x"
+    assert result.data.chart_params.calloutLabelKey == "y"
+    assert result.data.name == "My Donut Chart"
+    assert result.data.description == "This is a donut chart of the data"
