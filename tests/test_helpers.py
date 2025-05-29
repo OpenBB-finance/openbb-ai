@@ -1,4 +1,4 @@
-from openbb_ai.helpers import chart
+from openbb_ai.helpers import chart, table
 from openbb_ai.models import ClientArtifact, MessageArtifactSSE
 
 
@@ -110,3 +110,22 @@ def test_chart_donut():
     assert result.data.chart_params.calloutLabelKey == "y"
     assert result.data.name == "My Donut Chart"
     assert result.data.description == "This is a donut chart of the data"
+
+
+def test_table():
+    result = table(
+        data=[
+            {"x": 1, "y": 2, "z": 3},
+            {"x": 2, "y": 3, "z": 4},
+            {"x": 3, "y": 4, "z": 5},
+            {"x": 4, "y": 5, "z": 6},
+        ],
+        name="My Table",
+        description="This is a table of the data",
+    )
+
+    assert isinstance(result, MessageArtifactSSE)
+    assert isinstance(result.data, ClientArtifact)
+    assert result.data.type == "table"
+    assert result.data.name == "My Table"
+    assert result.data.description == "This is a table of the data"
