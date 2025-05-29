@@ -180,6 +180,57 @@ def citations(citations: list[Citation]) -> CitationCollectionSSE:
     return CitationCollectionSSE(data=CitationCollection(citations=citations))
 
 
+def table(
+    data: list[dict],
+    name: str | None = None,
+    description: str | None = None,
+) -> MessageArtifactSSE:
+    """Create a table message artifact SSE.
+
+    This function constructs a table artifact, which can be `yield`ed to the
+    client to display a table as streamed in-line agent output in OpenBB
+    Workspace.
+
+    Parameters
+    ----------
+    data: list[dict]
+        The data to be visualized in the table. Each dictionary represents a
+        row of the table, where keys represent the "columns" of the data.
+    name: str | None
+        The name of the table. Optional, but recommended.
+    description: str | None
+        A description of the table. Optional, but recommended.
+
+    Examples
+    --------
+    >>> # Create a table
+    >>> table(
+    ...     data=[
+    ...         {"x": 1, "y": 2, "z": 3},
+    ...         {"x": 2, "y": 3, "z": 4},
+    ...         {"x": 3, "y": 4, "z": 5},
+    ...         {"x": 4, "y": 5, "z": 6},
+    ...     ],
+    ...     name="My Table",
+    ...     description="This is a table of the data",
+    ... )
+
+    Returns
+    -------
+    MessageArtifactSSE
+        The table artifact to be sent to the client.
+    """
+
+    return MessageArtifactSSE(
+        data=ClientArtifact(
+            type="table",
+            name=name or "Table",
+            description=description or "A table of data",
+            content=data,
+        )
+    )
+
+
 def chart(
     type: Literal["line", "bar", "scatter", "pie", "donut"],
     data: list[dict],
