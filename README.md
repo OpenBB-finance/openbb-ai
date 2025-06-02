@@ -123,7 +123,7 @@ citation = cite(
 yield citations([citation])
 ```
 
-### table
+### `table`
 
 Create a table message artifact SSE to display a table as streamed in-line
 agent output in OpenBB Workspace.
@@ -143,7 +143,7 @@ yield table(
 )
 ```
 
-### chart
+### `chart`
 
 Create a chart message artifact SSE to display various types of charts
 (line, bar, scatter, pie, donut) as streamed in-line agent output in OpenBB
