@@ -6,6 +6,16 @@ custom agents that are compatible with OpenBB Workspace.
 For some example agents that demonstrate the full usage of the SDK, see the
 [example agents repository](https://github.com/OpenBB-finance/agents-for-openbb).
 
+## Features
+
+- [Streaming Conversations](#streaming-conversations)
+- [Reasoning steps / status updates](#reasoning_step)
+- [Retrieve widget data from OpenBB Workspace](#get_widget_data)
+- [Citations](#cite-and-citations)
+- [Display tables](#table)
+- [Create charts](#chart)
+- [Widget priorities](#widget-priority)
+
 ## Usage
 
 All helper functions return Server-Sent Event (SSE) messages that should be streamed back to the OpenBB Workspace from your agent's execution loop. For example, using FastAPI with `EventSourceResponse`:
@@ -41,6 +51,11 @@ requests to the agent. It should be used as the request body for FastAPI
 endpoints (if you're using FastAPI).
 
 Refer to the `QueryRequest` model definition (`openbb_ai.models.QueryRequest`) for full details on its fields and validation.
+
+**Agent backends are stateless**: full conversation history (messages), widget
+definitions, context, URLs, and any other state will be included in each
+`QueryRequest`. Each request to the agent can / should be handled independently
+with all necessary data provided upfront.
 
 Key fields:
 - `messages`: List of messages to submit to the agent. Supports both chat (`LlmClientMessage`) and function call result (`LlmClientFunctionCallResultMessage`) messages.
