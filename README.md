@@ -3,7 +3,7 @@
 This package provides a set of pydantic models, tools and helpers to build
 custom agents that are compatible with OpenBB Workspace.
 
-For some example agents that demonstrate the full ussage of the SDK, see the
+For some example agents that demonstrate the full usage of the SDK, see the
 [example agents repository](https://github.com/OpenBB-finance/agents-for-openbb).
 
 ## Usage
