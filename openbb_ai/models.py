@@ -2,7 +2,7 @@ import json
 import uuid
 from enum import Enum
 from typing import Annotated, Any, AsyncGenerator, Callable, Literal
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import xxhash
 from pydantic import (
@@ -170,6 +170,22 @@ class SourceInfo(BaseModel):
     # Make faux immutable
     model_config = {"frozen": True}
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, SourceInfo):
+            return False
+
+        # We only want to compare the input args of the metadata
+        reduced_metadata = {"input_args": self.metadata.get("input_args")}
+        this = self.model_dump(exclude_none=True)
+        this["metadata"] = reduced_metadata
+
+        # Do the same for the `other` SourceInfo object
+        other_reduced_metadata = {"input_args": other.metadata.get("input_args")}
+        other = other.model_dump(exclude_none=True)
+        other["metadata"] = other_reduced_metadata
+
+        return this == other
+
 
 class CitationHighlightBoundingBox(BaseModel):
     text: str
@@ -197,39 +213,17 @@ class Citation(BaseModel):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Citation):
             return False
-        if not self.signature or not other.signature:
-            return False
-        return self.signature == other.signature
 
-    @computed_field  # type: ignore[misc]
-    @property
-    def signature(self) -> str | None:
-        try:
-            if self.source_info.type == "widget":
-                metadata = self.source_info.metadata or {}
-                random_uuid = uuid4().hex[:8]
-                origin = self.source_info.origin or f"unknown-origin-{random_uuid}"
-                widget_id = (
-                    self.source_info.widget_id or f"unknown-widget_id-{random_uuid}"
-                )
-                args = [
-                    f"{str(k)}={str(v)}"
-                    for k, v in metadata.get("input_args", {}).items()
-                ]
-                return (
-                    "&".join(
-                        [
-                            "origin=" + origin,
-                            "widget_id=" + widget_id,
-                            "args=[" + "&".join(args) + "]",
-                        ]
-                    )
-                    .lower()
-                    .replace(" ", "_")
-                )
-            return None
-        except Exception:
-            return None
+        if self.source_info != other.source_info:
+            return False
+
+        if self.details != other.details:
+            return False
+
+        if self.quote_bounding_boxes != other.quote_bounding_boxes:
+            return False
+
+        return True
 
     @model_validator(mode="before")
     @classmethod
