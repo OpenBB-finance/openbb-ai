@@ -16,6 +16,9 @@ For some example agents that demonstrate the full usage of the SDK, see the
 - [Create charts](#chart)
 - [Widget priorities](#widget-priority)
 
+To understand more about how everything works, see the
+[Details](#details) section of this README.
+
 ## Usage
 
 All helper functions return Server-Sent Event (SSE) messages that should be streamed back to the OpenBB Workspace from your agent's execution loop. For example, using FastAPI with `EventSourceResponse`:
@@ -37,10 +40,15 @@ app = FastAPI()
 
 @app.get("/query")
 async def stream(request: QueryRequest):
-    async def event_generator():
-        yield reasoning_step("Starting agent", event_type="INFO")
-        yield message_chunk("Hello, world!")
-    return EventSourceResponse(event_generator())
+    async def execution_loop():
+        async def event_generator():
+            yield reasoning_step("Starting agent", event_type="INFO")
+            yield message_chunk("Hello, world!")
+        
+        async for event in event_generator():
+            yield event.model_dump()
+        
+    return EventSourceResponse(execution_loop())
 ```
 
 
@@ -72,14 +80,18 @@ typically from the agent's streamed response.
 ```python
 from openbb_ai.helpers import message_chunk
 
-yield message_chunk("Hello, world!")
+yield message_chunk("Hello, world!").model_dump()
 ```
 
 ### `reasoning_step`
+OpenBB Workspace allows you to return "reasoning steps" (sometimes referred to
+as "thought steps" or even "status updates") from your custom agent to the
+front-end, at any point in the agent's execution. This is often useful for
+providing updates and extra information to the user, particularly for
+long-running queries, or for complicated workflows.
 
-Create a reasoning step (also known as a status update) SSE to communicate the
-status of the agent, or any additional information as part of the agent's
-execution to OpenBB Workspace.
+To send a reasoning step SSE to OpenBB Workspace, use the `reasoning_step`
+helper function:
 
 ```python
 from openbb_ai.helpers import reasoning_step
@@ -88,7 +100,7 @@ yield reasoning_step(
     message="Processing data",
     event_type="INFO",
     details={"step": 1},
-)
+).model_dump()
 ```
 
 ### `get_widget_data`
@@ -102,8 +114,12 @@ from openbb_ai.models import WidgetRequest
 
 widget_requests = [WidgetRequest(widget=..., input_arguments={...})]
 
-yield get_widget_data(widget_requests)
+yield get_widget_data(widget_requests).model_dump()
 ```
+
+For more technical details on how this works, see the
+[Function calling to OpenBB Workspace (to retrieve widget data)](#function-calling-to-openbb-workspace-to-retrieve-widget-data)
+section of this README.
 
 ### `cite` and `citations`
 
@@ -120,7 +136,7 @@ citation = cite(
     extra_details={"note": "Optional extra details"},
 )
 
-yield citations([citation])
+yield citations([citation]).model_dump()
 ```
 
 ### `table`
@@ -140,7 +156,7 @@ yield table(
     ],
     name="My Table",
     description="This is a table of the data",
-)
+).model_dump()
 ```
 
 ### `chart`
@@ -164,7 +180,7 @@ yield chart(
     y_keys=["y"],
     name="My Chart",
     description="This is a chart of the data",
-)
+).model_dump()
 
 yield chart(
     type="pie",
@@ -178,7 +194,7 @@ yield chart(
     callout_label_key="category",
     name="My Chart",
     description="This is a chart of the data",
-)
+).model_dump()
 ```
 
 ### Widget Priority
@@ -260,3 +276,91 @@ WidgetCollection(
 
 You can also see the parameter information of each widget in the `params` field
 of the `Widget` object.
+
+## Details
+This section contains more specific technical details about how the various
+components work together.
+
+### Architecture
+
+```
+┌─────────────────────┐                ┌───────────────────────────────────────────┐
+│                     │                │                                           │
+│                     │                │               Agent                       │
+│                     │                │              (Backend)                    │
+│                     │ 1. HTTP POST   │                                           │
+│   OpenBB Workspace  │ ───────────>   │  ┌─────────────┐    ┌─────────────────┐   │
+│      (Frontend)     │   /query       │  │             │    │                 │   │
+│                     │                │  │    LLM      │───>│    Function     │   │
+│  ┌───────────────┐  │                │  │  Processing │    │     Call        │   │
+│  │ Widget Data   │  │ <───────────   │  │             │<───│   Processing    │   │
+│  │  Retrieval    │  │  2. Function   │  │             │    │                 │   │
+│  └───────────────┘  │   Call SSE     │  └─────────────┘    └─────────────────┘   │
+│         ^           │                │                                           │
+│         │           │ 3. HTTP POST   │                                           │
+│         └───────────│ ───────────>   │                                           │
+│    Execute &        │   /query       │                                           │
+│  Return Results     │                │                                           │
+│                     │ <───────────   │                                           │
+│                     │  4. SSE        │                                           │
+│                     │  (text chunks, │                                           │
+│                     │reasoning steps)│                                           │
+└─────────────────────┘                └───────────────────────────────────────────┘
+```
+
+The architecture consists of two main components:
+
+1. **OpenBB Workspace (Frontend)**: The user interface where queries are entered
+2. **Agent (Backend)**: Programmed by you, handles the processing of queries, executing internal function calls, and returns answers
+
+The frontend communicates with the backend via REST requests to the `query`
+endpoint as defined in the `agent.json` schema.
+
+### Function calling to OpenBB Workspace (to retrieve widget data)
+When retrieving data from widgets on the OpenBB Workspace, your custom agent must
+execute a **remote** function call, which gets interpreted by the OpenBB
+Workspace. This is in contrast to **local** function calling, which is executed locally by the agent within its own runtime / environment.
+
+Unlike local function calling, where the function is executed entirely on the
+custom agent backend, a remote function call to the OpenBB Workspace is
+partially executed on the OpenBB Workspace, and the results are sent back to the
+custom agent backend.
+
+Below is a timing diagram of how a remote function call to the OpenBB Workspace works:
+
+```
+OpenBB Workspace                    Custom Agent
+       │                                │
+       │ 1. POST /query                 │
+       │ {                              │
+       │   messages: [...],             │
+       │   widgets: {...}               │
+       │ }                              │
+       │───────────────────────────────>│
+       │                                │
+       │     2. Function Call SSE       │
+       │<───────────────────────────────│
+       │    (Connection then closed)    │
+       │                                │
+       │ 3. POST /query                 │
+       │ {                              │
+       │   messages: [                  │
+       │     ...(original messages),    │
+       │     function_call,             │
+       │     function_call_result       │
+       │   ],                           │
+       │   widgets: {...}               │
+       │ }                              │
+       │───────────────────────────────>│
+       │                                │
+       │     4. SSEs (text chunks,      │
+       │        reasoning steps, etc.)  │
+       │<───────────────────────────────│
+       │                                │
+```
+
+This is what happens "under-the-hood" when you yield from the `get_widget_data`
+helper function, and close the connection: OpenBB Workspace executes the
+function call (retrieving the widget data), and then sends a follow-up request
+to the `query` endpoint of the agent, containing the function call and its
+result.
