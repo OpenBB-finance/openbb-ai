@@ -40,10 +40,15 @@ app = FastAPI()
 
 @app.get("/query")
 async def stream(request: QueryRequest):
-    async def event_generator():
-        yield reasoning_step("Starting agent", event_type="INFO")
-        yield message_chunk("Hello, world!")
-    return EventSourceResponse(event_generator())
+    async def execution_loop():
+        async def event_generator():
+            yield reasoning_step("Starting agent", event_type="INFO")
+            yield message_chunk("Hello, world!")
+        
+        async for event in event_generator():
+            yield event.model_dump()
+        
+    return EventSourceResponse(execution_loop())
 ```
 
 
@@ -75,7 +80,7 @@ typically from the agent's streamed response.
 ```python
 from openbb_ai.helpers import message_chunk
 
-yield message_chunk("Hello, world!")
+yield message_chunk("Hello, world!").model_dump()
 ```
 
 ### `reasoning_step`
@@ -95,7 +100,7 @@ yield reasoning_step(
     message="Processing data",
     event_type="INFO",
     details={"step": 1},
-)
+).model_dump()
 ```
 
 ### `get_widget_data`
@@ -109,7 +114,7 @@ from openbb_ai.models import WidgetRequest
 
 widget_requests = [WidgetRequest(widget=..., input_arguments={...})]
 
-yield get_widget_data(widget_requests)
+yield get_widget_data(widget_requests).model_dump()
 ```
 
 For more technical details on how this works, see the
@@ -131,7 +136,7 @@ citation = cite(
     extra_details={"note": "Optional extra details"},
 )
 
-yield citations([citation])
+yield citations([citation]).model_dump()
 ```
 
 ### `table`
@@ -151,7 +156,7 @@ yield table(
     ],
     name="My Table",
     description="This is a table of the data",
-)
+).model_dump()
 ```
 
 ### `chart`
@@ -175,7 +180,7 @@ yield chart(
     y_keys=["y"],
     name="My Chart",
     description="This is a chart of the data",
-)
+).model_dump()
 
 yield chart(
     type="pie",
@@ -189,7 +194,7 @@ yield chart(
     callout_label_key="category",
     name="My Chart",
     description="This is a chart of the data",
-)
+).model_dump()
 ```
 
 ### Widget Priority
