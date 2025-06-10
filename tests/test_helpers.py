@@ -1,5 +1,22 @@
-from openbb_ai.helpers import chart, table
-from openbb_ai.models import ClientArtifact, MessageArtifactSSE
+from openbb_ai.helpers import chart, reasoning_step, table
+from openbb_ai.models import ClientArtifact, MessageArtifactSSE, StatusUpdateSSE
+
+
+def test_reasoning_step():
+    # String for details can be passed in
+    result = reasoning_step("Hello, world!", details="This is a test")
+    assert isinstance(result, StatusUpdateSSE)
+    assert result.data.details == ["This is a test"]
+
+    # Dict for details can be passed in
+    result = reasoning_step("Hello, world!", details={"test": "This is a test"})
+    assert isinstance(result, StatusUpdateSSE)
+    assert result.data.details == [{"test": "This is a test"}]
+
+    # No details can be passed in
+    result = reasoning_step("Hello, world!")
+    assert isinstance(result, StatusUpdateSSE)
+    assert result.data.details == []
 
 
 def test_chart_line():

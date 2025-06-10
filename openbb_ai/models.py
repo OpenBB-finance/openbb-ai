@@ -682,7 +682,7 @@ class StatusUpdateSSEData(BaseModel):
     eventType: Literal["INFO", "WARNING", "ERROR"]
     message: str
     group: Literal["reasoning"] = "reasoning"
-    details: list[dict[str, Any]] | None = None
+    details: list[dict[str, Any] | str] | None = None
     artifacts: list[ClientArtifact] | None = None
     hidden: bool = False
 
@@ -692,12 +692,12 @@ class StatusUpdateSSEData(BaseModel):
         # Exclude these fields from being in the "details" field.  (since this
         # pollutes the JSON output)
         _exclude_fields = []
-
-        if details := values.get("details"):
-            for detail in details:
-                for key in list(detail.keys()):
-                    if key.lower() in _exclude_fields:
-                        detail.pop(key, None)
+        if isinstance(values["details"], dict):
+            if details := values.get("details"):
+                for detail in details:
+                    for key in list(detail.keys()):
+                        if key.lower() in _exclude_fields:
+                            detail.pop(key, None)
         return values
 
 
