@@ -21,11 +21,25 @@ To understand more about how everything works, see the
 
 ## Usage
 
-All helper functions return Server-Sent Event (SSE) messages that should be streamed back to the OpenBB Workspace from your agent's execution loop. For example, using FastAPI with `EventSourceResponse`:
+### Initial Setup
+
+To use the OpenBB Custom Agent SDK, you need to install the package:
+
+```bash
+pip install openbb-ai
+```
+
+Your agent must consist of two endpoints:
+
+1. A `query` endpoint. This is the main endpoint that will be called by the OpenBB Workspace. It returns responses using [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events) (SSEs).
+2. An `agents.json` endpoint. This is the endpoint that will be called by the OpenBB Workspace to retrieve the agent's definition, and is what allows it to be added to the OpenBB Workspace.
+
+
+All helper functions return Server-Sent Event (SSE) messages that should be streamed back to the OpenBB Workspace from your agent's execution loop. For example, using FastAPI with `EventSourceResponse` from `sse_starlette`:
 
 ```python
 from fastapi import FastAPI
-from starlette.responses import EventSourceResponse
+from sse_starlette import EventSourceResponse
 from openbb_ai import (
     reasoning_step,
     message_chunk,
@@ -38,10 +52,29 @@ from openbb_ai import (
 
 app = FastAPI()
 
+@app.get("/agents.json")
+async def agents_json():
+    return JSONResponse(
+        content={
+            "<agent-id>": {
+                "name": "My Agent",
+                "description": "This is my agent",
+                "image": f"{AGENT_BASE_URL}/my-agent/logo.png",
+                "endpoints": {"query": f"{AGENT_BASE_URL}/query"},  # must match the query endpoint below
+                "features": {
+                    "streaming": True,  # must be True
+                    "widget-dashboard-select": True,  # Enable access to priority widgets
+                    "widget-dashboard-search": True,  # Enable access to non-priority widgets on current dashboard
+                },
+            }
+        }
+    )
+
 @app.get("/query")
 async def stream(request: QueryRequest):
     async def execution_loop():
         async def event_generator():
+            # Your agent's logic lives here
             yield reasoning_step("Starting agent", event_type="INFO")
             yield message_chunk("Hello, world!")
         
