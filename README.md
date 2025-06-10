@@ -8,7 +8,7 @@ For some example agents that demonstrate the full usage of the SDK, see the
 
 ## Features
 
-- [Streaming Conversations](#streaming-conversations)
+- [Streaming Conversations](#message_chunk)
 - [Reasoning steps / status updates](#reasoning_step)
 - [Retrieve widget data from OpenBB Workspace](#get_widget_data)
 - [Citations](#cite-and-citations)
