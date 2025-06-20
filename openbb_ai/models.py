@@ -29,6 +29,21 @@ EXCLUDE_CITATION_DETAILS_FIELDS = [
     "transcript_url",
 ]
 
+EXCLUDE_STATUS_UPDATE_DETAILS_FIELDS = [
+    "lastupdated",
+    "source",
+    "id",
+    "uuid",
+    "storedfileuuid",
+    "url",
+    "datakey",
+    "originalfilename",
+    "extension",
+    "category",
+    "subcategory",
+    "transcript_url",
+]
+
 
 class UserAPIKeys(BaseModel):
     openai_api_key: str | None = Field(
@@ -691,13 +706,14 @@ class StatusUpdateSSEData(BaseModel):
     def exclude_fields(cls, values):
         # Exclude these fields from being in the "details" field.  (since this
         # pollutes the JSON output)
-        _exclude_fields = []
-        if isinstance(values["details"], dict):
-            if details := values.get("details"):
+        _exclude_fields = EXCLUDE_STATUS_UPDATE_DETAILS_FIELDS
+        if details := values.get("details"):
+            if isinstance(details, list):
                 for detail in details:
-                    for key in list(detail.keys()):
-                        if key.lower() in _exclude_fields:
-                            detail.pop(key, None)
+                    if isinstance(detail, dict):
+                        for key in list(detail.keys()):
+                            if key.lower() in _exclude_fields:
+                                detail.pop(key, None)
         return values
 
 
