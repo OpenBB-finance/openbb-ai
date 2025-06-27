@@ -3,7 +3,10 @@ name = "openbb-ai"
 version = "1.6.2"
 description = "An SDK for building agents compatible with OpenBB Workspace"
 authors = [
-    {name = "Michael Struwig",email = "michael.struwig@openbb.finance"}
+    { name = "OpenBB Team", email = "hello@openbb.finance" },
+    { name = "Michael Struwig", email = "michael.struwig@openbb.finance" },
+    { name = "Diogo Sousa", email = "diogo.sousa@openbb.finance" },
+    { name = "Theodore Aptekarev", email = "theodore.aptekarev@openbb.finance" },
 ]
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,6 +19,9 @@ dependencies = [
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+include = ["py.typed"]
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.15.0"
