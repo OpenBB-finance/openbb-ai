@@ -1,3 +1,4 @@
+import uuid
 from typing import Any, Literal
 
 from .models import (
@@ -198,6 +199,7 @@ def table(
         row of the table, where keys represent the "columns" of the data.
     name: str | None
         The name of the table. Optional, but recommended.
+        If set, must be unique within the context of the chat.
     description: str | None
         A description of the table. Optional, but recommended.
 
@@ -224,7 +226,7 @@ def table(
     return MessageArtifactSSE(
         data=ClientArtifact(
             type="table",
-            name=name or "Table",
+            name=name or f"Table_{uuid.uuid4().hex[:4]}",
             description=description or "A table of data",
             content=data,
         )
