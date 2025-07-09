@@ -515,6 +515,9 @@ class ClientFunctionCallError(BaseModel):
     error_type: str = Field(description="The type of error that occurred.")
     content: str = Field(description="The error message of the function call.")
 
+class ClientCommandResult(BaseModel):
+    status: Literal["success", "error", "warning"]
+    message: str | None = None
 
 class LlmClientFunctionCallResultMessage(BaseModel):
     """Contains the result of a function call made against a client."""
@@ -524,7 +527,7 @@ class LlmClientFunctionCallResultMessage(BaseModel):
     input_arguments: dict[str, Any] = Field(
         default_factory=dict, description="The input arguments passed to the function"
     )
-    data: list[DataContent | DataFileReferences | ClientFunctionCallError] = Field(
+    data: list[ClientCommandResult | DataContent | DataFileReferences | ClientFunctionCallError] = Field(
         description="The content of the function call. Each element corresponds to the result of a different data source."  # noqa: E501
     )
     extra_state: dict[str, Any] = Field(
@@ -564,6 +567,48 @@ class DataSourceParamOptionsRequestPayload(BaseModel):
         description="A dictionary of input arguments to pass to the options endpoint."
     )
 
+class WidgetInfo(BaseModel):
+    id: str = Field(
+        description="The ID of the widget. Used to identify the widget in the workspace."
+    )
+    name: str = Field(
+        description="The name of the widget. Used to display the widget in the workspace."
+    )
+
+class TabInfo(BaseModel):
+    tab_id: str = Field(
+        default="__no_tab__",
+        description="The ID of the tab. Used to identify the tab in the workspace.",
+    )
+    widgets: list[WidgetInfo] | None = Field(
+        default=None,
+        description="A list of widget information. Used to identify the widgets in the tab.",
+    )
+
+class DashboardInfo(BaseModel):
+    id: str = Field(
+        description="The ID of the dashboard. Used to identify the dashboard in the workspace."
+    )
+    name: str = Field(
+        description="The name of the dashboard. Used to display the dashboard in the workspace."
+    )
+    current_tab_id: str = Field(
+        description="The name of the current tab. Used to identify the tab in the workspace.",
+    )    
+    tabs: list[TabInfo] | None = Field(
+        default=None,
+        description="A list of tab information. Used to identify the tabs in the dashboard.",
+    )
+
+class WorkspaceState(BaseModel):
+    current_dashboard_uuid: UUID | None = Field(
+        default=None,
+        description="The UUID of the current dashboard. Used to identify the dashboard in the workspace.",
+    )
+    dashboards_info: list[DashboardInfo] | None = Field(
+        default=None,
+        description="A list of dashboard information. Used to identify the dashboards in the workspace.",
+    )
 
 class QueryRequest(BaseModel):
     messages: list[LlmClientFunctionCallResultMessage | LlmClientMessage] = Field(
@@ -591,6 +636,10 @@ class QueryRequest(BaseModel):
         default="UTC",
         description="The timezone to use for the request.",
         examples=["UTC", "America/New_York", "Europe/London", "Asia/Tokyo"],
+    )
+    workspace_state: WorkspaceState | None = Field(
+        default=None,
+        description="Context of the workspace, with data about current state of the workspace.",
     )
 
     @field_validator("messages", mode="before", check_fields=False)
@@ -669,7 +718,13 @@ class MessageArtifactSSE(BaseSSE):
 
 
 class FunctionCallSSEData(BaseModel):
-    function: Literal["get_widget_data", "get_extra_widget_data", "get_params_options"]
+    function: Literal[
+        "get_widget_data",
+        "get_extra_widget_data",
+        "get_params_options",
+        "add_widget_to_dashboard",
+        "update_widget_in_dashboard",
+    ]
     input_arguments: dict
     extra_state: dict | None = Field(
         default=None,
