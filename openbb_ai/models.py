@@ -568,7 +568,7 @@ class DataSourceParamOptionsRequestPayload(BaseModel):
     )
 
 class WidgetInfo(BaseModel):
-    id: str = Field(
+    widget_uuid: str = Field(
         description="The ID of the widget. Used to identify the widget in the workspace."
     )
     name: str = Field(
