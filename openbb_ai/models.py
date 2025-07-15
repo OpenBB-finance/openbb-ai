@@ -2,7 +2,7 @@ import json
 import uuid
 from enum import Enum
 from typing import Annotated, Any, AsyncGenerator, Callable, Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import xxhash
 from pydantic import (
@@ -212,6 +212,10 @@ class CitationHighlightBoundingBox(BaseModel):
 
 
 class Citation(BaseModel):
+    id: UUID = Field(
+        default_factory=uuid4,
+        description="A unique identifier for the citation.",
+    )
     source_info: SourceInfo
     details: list[dict[str, Any]] | None = Field(
         default=None,
