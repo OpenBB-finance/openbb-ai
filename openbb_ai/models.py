@@ -519,9 +519,11 @@ class ClientFunctionCallError(BaseModel):
     error_type: str = Field(description="The type of error that occurred.")
     content: str = Field(description="The error message of the function call.")
 
+
 class ClientCommandResult(BaseModel):
     status: Literal["success", "error", "warning"]
     message: str | None = None
+
 
 class LlmClientFunctionCallResultMessage(BaseModel):
     """Contains the result of a function call made against a client."""
@@ -531,7 +533,9 @@ class LlmClientFunctionCallResultMessage(BaseModel):
     input_arguments: dict[str, Any] = Field(
         default_factory=dict, description="The input arguments passed to the function"
     )
-    data: list[ClientCommandResult | DataContent | DataFileReferences | ClientFunctionCallError] = Field(
+    data: list[
+        ClientCommandResult | DataContent | DataFileReferences | ClientFunctionCallError
+    ] = Field(
         description="The content of the function call. Each element corresponds to the result of a different data source."  # noqa: E501
     )
     extra_state: dict[str, Any] = Field(
@@ -571,6 +575,7 @@ class DataSourceParamOptionsRequestPayload(BaseModel):
         description="A dictionary of input arguments to pass to the options endpoint."
     )
 
+
 class WidgetInfo(BaseModel):
     widget_uuid: str = Field(
         description="The ID of the widget. Used to identify the widget in the workspace."
@@ -578,6 +583,7 @@ class WidgetInfo(BaseModel):
     name: str = Field(
         description="The name of the widget. Used to display the widget in the workspace."
     )
+
 
 class TabInfo(BaseModel):
     tab_id: str = Field(
@@ -589,6 +595,7 @@ class TabInfo(BaseModel):
         description="A list of widget information. Used to identify the widgets in the tab.",
     )
 
+
 class DashboardInfo(BaseModel):
     id: str = Field(
         description="The ID of the dashboard. Used to identify the dashboard in the workspace."
@@ -598,11 +605,12 @@ class DashboardInfo(BaseModel):
     )
     current_tab_id: str = Field(
         description="The name of the current tab. Used to identify the tab in the workspace.",
-    )    
+    )
     tabs: list[TabInfo] | None = Field(
         default=None,
         description="A list of tab information. Used to identify the tabs in the dashboard.",
     )
+
 
 class WorkspaceState(BaseModel):
     current_dashboard_uuid: UUID | None = Field(
@@ -613,6 +621,7 @@ class WorkspaceState(BaseModel):
         default=None,
         description="A list of dashboard information. Used to identify the dashboards in the workspace.",
     )
+
 
 class QueryRequest(BaseModel):
     messages: list[LlmClientFunctionCallResultMessage | LlmClientMessage] = Field(
