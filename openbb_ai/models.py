@@ -578,10 +578,10 @@ class DataSourceParamOptionsRequestPayload(BaseModel):
 
 class WidgetInfo(BaseModel):
     widget_uuid: str = Field(
-        description="The ID of the widget. Used to identify the widget in the workspace."
+        description="The ID of the widget. Used to identify the widget in the workspace."  # noqa: E501
     )
     name: str = Field(
-        description="The name of the widget. Used to display the widget in the workspace."
+        description="The name of the widget. Used to display the widget in the workspace."  # noqa: E501
     )
 
 
@@ -592,34 +592,34 @@ class TabInfo(BaseModel):
     )
     widgets: list[WidgetInfo] | None = Field(
         default=None,
-        description="A list of widget information. Used to identify the widgets in the tab.",
+        description="A list of widget information. Used to identify the widgets in the tab.",  # noqa: E501
     )
 
 
 class DashboardInfo(BaseModel):
     id: str = Field(
-        description="The ID of the dashboard. Used to identify the dashboard in the workspace."
+        description="The ID of the dashboard. Used to identify the dashboard in the workspace."  # noqa: E501
     )
     name: str = Field(
-        description="The name of the dashboard. Used to display the dashboard in the workspace."
+        description="The name of the dashboard. Used to display the dashboard in the workspace."  # noqa: E501
     )
     current_tab_id: str = Field(
-        description="The name of the current tab. Used to identify the tab in the workspace.",
+        description="The name of the current tab. Used to identify the tab in the workspace.",  # noqa: E501
     )
     tabs: list[TabInfo] | None = Field(
         default=None,
-        description="A list of tab information. Used to identify the tabs in the dashboard.",
+        description="A list of tab information. Used to identify the tabs in the dashboard.",  # noqa: E501
     )
 
 
 class WorkspaceState(BaseModel):
     current_dashboard_uuid: UUID | None = Field(
         default=None,
-        description="The UUID of the current dashboard. Used to identify the dashboard in the workspace.",
+        description="The UUID of the current dashboard. Used to identify the dashboard in the workspace.",  # noqa: E501
     )
     dashboards_info: list[DashboardInfo] | None = Field(
         default=None,
-        description="A list of dashboard information. Used to identify the dashboards in the workspace.",
+        description="A list of dashboard information. Used to identify the dashboards in the workspace.",  # noqa: E501
     )
 
 
@@ -652,7 +652,7 @@ class QueryRequest(BaseModel):
     )
     workspace_state: WorkspaceState | None = Field(
         default=None,
-        description="Context of the workspace, with data about current state of the workspace.",
+        description="Context of the workspace, with data about current state of the workspace.",  # noqa: E501
     )
 
     @field_validator("messages", mode="before", check_fields=False)
