@@ -565,6 +565,7 @@ class DataSourceRequestPayload(BaseModel):
     origin: str
     id: str
     input_args: dict[str, Any]
+    ssm_request: dict[str, Any] | None = None
 
 
 class DataSourceParamOptionsRequestPayload(BaseModel):
