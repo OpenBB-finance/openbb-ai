@@ -565,7 +565,12 @@ class DataSourceRequestPayload(BaseModel):
     origin: str
     id: str
     input_args: dict[str, Any]
-    ssm_request: dict[str, Any] | None = None
+    ssm_request: dict[str, Any] | None = Field(
+        default=None,
+        description="An optional dictionary containing the SSM (Server-Side Model) request parameters. "
+                    "This field is used to support SSRM model operations and should include any necessary "
+                    "input arguments required by the model."
+    )
 
 
 class DataSourceParamOptionsRequestPayload(BaseModel):
