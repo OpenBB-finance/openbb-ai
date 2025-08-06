@@ -1,7 +1,7 @@
 import json
 import uuid
 from enum import Enum
-from typing import Annotated, Any, AsyncGenerator, Callable, Literal
+from typing import Annotated, Any, AsyncGenerator, Callable, Literal, Sequence
 from uuid import UUID, uuid4
 
 import xxhash
@@ -455,6 +455,10 @@ class LlmClientMessage(BaseModel):
     content: str | LlmClientFunctionCall = Field(
         description="The content of the message or the result of a function call."
     )
+    agent_id: str | None = Field(
+        default=None,
+        description="The ID of the agent that created the message. If not provided, it will be set to the default agent ID.",
+    )
 
     @field_validator("content", mode="before", check_fields=False)
     def parse_content(cls, v):
@@ -616,7 +620,26 @@ class DashboardInfo(BaseModel):
     )
 
 
+class WorkspaceAgent(BaseModel):
+    id: str = Field(
+        description="The ID of the agent. Used to identify the agent in the workspace."
+    )
+    name: str = Field(
+        description="The name of the agent. Used to display the agent in the workspace."
+    )
+    description: str | None = Field(
+        default=None, description="A description of the agent."
+    )
+    features: dict[str, bool] = Field(
+        default_factory=dict,
+        description="A dictionary of features that the agent supports.",
+    )
+
+
 class WorkspaceState(BaseModel):
+    agents: list[WorkspaceAgent] | None = Field(
+        default=None, description="A list of agents in the workspace."
+    )
     current_dashboard_uuid: UUID | None = Field(
         default=None,
         description="The UUID of the current dashboard. Used to identify the dashboard in the workspace.",  # noqa: E501
@@ -625,6 +648,15 @@ class WorkspaceState(BaseModel):
         default=None,
         description="A list of dashboard information. Used to identify the dashboards in the workspace.",  # noqa: E501
     )
+
+
+WorkspaceOptions = Sequence[
+    Literal[
+        "widget-global-search",
+        "workspace-generative-ui",
+        "workspace-agent-orchestration",
+    ]
+]
 
 
 class QueryRequest(BaseModel):
@@ -657,6 +689,10 @@ class QueryRequest(BaseModel):
     workspace_state: WorkspaceState | None = Field(
         default=None,
         description="Context of the workspace, with data about current state of the workspace.",  # noqa: E501
+    )
+    workspace_options: WorkspaceOptions = Field(
+        default=list,
+        description="A list of options to modify the behavior of the query. ",
     )
 
     @field_validator("messages", mode="before", check_fields=False)
@@ -741,6 +777,7 @@ class FunctionCallSSEData(BaseModel):
         "get_params_options",
         "add_widget_to_dashboard",
         "update_widget_in_dashboard",
+        "assign_tasks_to_agents",
     ]
     input_arguments: dict
     extra_state: dict | None = Field(
