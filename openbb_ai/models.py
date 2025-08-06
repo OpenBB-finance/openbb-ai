@@ -457,7 +457,7 @@ class LlmClientMessage(BaseModel):
     )
     agent_id: str | None = Field(
         default=None,
-        description="The ID of the agent that created the message. If not provided, it will be set to the default agent ID.",
+        description="The ID of the agent that created the message. If not provided, it will be set to the default agent ID.",  # noqa: E501
     )
 
     @field_validator("content", mode="before", check_fields=False)
