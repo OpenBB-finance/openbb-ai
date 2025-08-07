@@ -457,7 +457,7 @@ class LlmClientMessage(BaseModel):
     )
     agent_id: str | None = Field(
         default=None,
-        description="The ID of the agent that created the message. If not provided, it will be set to the default agent ID.",  # noqa: E501
+        description="The ID of the agent that created the message. If not provided, it will be set to the default agent ID.",
     )
 
     @field_validator("content", mode="before", check_fields=False)
@@ -569,10 +569,6 @@ class DataSourceRequestPayload(BaseModel):
     origin: str
     id: str
     input_args: dict[str, Any]
-    ssm_request: dict[str, Any] | None = Field(
-        default=None,
-        description="An optional dictionary containing the SSM (Server-Side Model) request parameters. ",  # noqa: E501
-    )
 
 
 class DataSourceParamOptionsRequestPayload(BaseModel):
@@ -621,6 +617,10 @@ class DashboardInfo(BaseModel):
 
 
 class WorkspaceAgent(BaseModel):
+    holder_url: str | None = Field(
+        default=None,
+        description="The URL of the agent holder. Used to display the agent in the workspace.",
+    )
     id: str = Field(
         description="The ID of the agent. Used to identify the agent in the workspace."
     )
@@ -633,6 +633,10 @@ class WorkspaceAgent(BaseModel):
     features: dict[str, bool] = Field(
         default_factory=dict,
         description="A dictionary of features that the agent supports.",
+    )
+    orchestration_enabled: bool = Field(
+        default=False,
+        description="Set True to enable agent orchestration.",
     )
 
 
