@@ -634,11 +634,6 @@ class WorkspaceAgent(BaseModel):
         default_factory=dict,
         description="A dictionary of features that the agent supports.",
     )
-    orchestration_enabled: bool = Field(
-        default=False,
-        description="Set True to enable agent orchestration.",
-    )
-
 
 class WorkspaceState(BaseModel):
     agents: list[WorkspaceAgent] | None = Field(
