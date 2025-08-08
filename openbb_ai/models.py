@@ -741,6 +741,7 @@ class FunctionCallSSEData(BaseModel):
         "get_params_options",
         "add_widget_to_dashboard",
         "update_widget_in_dashboard",
+        "execute_agent_tool",
     ]
     input_arguments: dict
     extra_state: dict | None = Field(
@@ -829,3 +830,20 @@ class StreamedText:
 class WidgetRequest(BaseModel):
     widget: Widget
     input_arguments: dict[str, Any]
+
+
+class AgentTool(BaseModel):
+    """Tool that can be executed by an agent."""
+
+    name: str = Field(description="The name of the tool.")
+    url: str = Field(description="The URL of the tool.")
+    endpoint: str | None = Field(
+        None, description="The direct REST endpoint of the tool."
+    )
+    description: str | None = Field(None, description="The description of the tool.")
+    input_schema: dict[str, Any] | None = Field(
+        None, description="The input schema of the tool."
+    )
+    auth_token: str | None = Field(
+        None, description="The authentication token for the tool."
+    )
