@@ -627,6 +627,23 @@ class WorkspaceState(BaseModel):
     )
 
 
+class AgentTool(BaseModel):
+    """Tool that can be executed by an agent."""
+
+    name: str = Field(description="The name of the tool.")
+    url: str = Field(description="The URL of the tool.")
+    endpoint: str | None = Field(
+        None, description="The direct REST endpoint of the tool."
+    )
+    description: str | None = Field(None, description="The description of the tool.")
+    input_schema: dict[str, Any] | None = Field(
+        None, description="The input schema of the tool."
+    )
+    auth_token: str | None = Field(
+        None, description="The authentication token for the tool."
+    )
+
+
 class QueryRequest(BaseModel):
     messages: list[LlmClientFunctionCallResultMessage | LlmClientMessage] = Field(
         description="A list of messages to submit to the copilot."
@@ -657,6 +674,10 @@ class QueryRequest(BaseModel):
     workspace_state: WorkspaceState | None = Field(
         default=None,
         description="Context of the workspace, with data about current state of the workspace.",  # noqa: E501
+    )
+    tools: list[AgentTool] | None = Field(
+        default=None,
+        description="Tools that can be used to execute the request.",
     )
 
     @field_validator("messages", mode="before", check_fields=False)
@@ -830,20 +851,3 @@ class StreamedText:
 class WidgetRequest(BaseModel):
     widget: Widget
     input_arguments: dict[str, Any]
-
-
-class AgentTool(BaseModel):
-    """Tool that can be executed by an agent."""
-
-    name: str = Field(description="The name of the tool.")
-    url: str = Field(description="The URL of the tool.")
-    endpoint: str | None = Field(
-        None, description="The direct REST endpoint of the tool."
-    )
-    description: str | None = Field(None, description="The description of the tool.")
-    input_schema: dict[str, Any] | None = Field(
-        None, description="The input schema of the tool."
-    )
-    auth_token: str | None = Field(
-        None, description="The authentication token for the tool."
-    )
