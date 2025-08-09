@@ -640,11 +640,12 @@ class WorkspaceAgent(BaseModel):
         description="A dictionary of features that the agent supports.",
     )
 
+
 class WorkspaceState(BaseModel):
     action_history: list[str] | None = Field(
         default=None,
         description="A list of actions taken in the workspace. Used to track the history of actions in the workspace.",  # noqa: E501
-    )    
+    )
     agents: list[WorkspaceAgent] | None = Field(
         default=None, description="A list of agents in the workspace."
     )
