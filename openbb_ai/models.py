@@ -700,7 +700,7 @@ class QueryRequest(BaseModel):
         description="Context of the workspace, with data about current state of the workspace.",  # noqa: E501
     )
     workspace_options: WorkspaceOptions = Field(
-        default=list,
+        default=[],
         description="A list of options to modify the behavior of the query. ",
     )
 
