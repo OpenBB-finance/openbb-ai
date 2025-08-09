@@ -457,7 +457,10 @@ class LlmClientMessage(BaseModel):
     )
     agent_id: str | None = Field(
         default=None,
-        description="The ID of the agent that created the message. If not provided, it will be set to the default agent ID.",
+        description=(
+            "The ID of the agent that created the message. "
+            "If not provided, it will be set to the default agent ID."
+        ),
     )
 
     @field_validator("content", mode="before", check_fields=False)
@@ -619,7 +622,9 @@ class DashboardInfo(BaseModel):
 class WorkspaceAgent(BaseModel):
     holder_url: str | None = Field(
         default=None,
-        description="The URL of the agent holder. Used to display the agent in the workspace.",
+        description=(
+            "The URL of the agent holder. Used to display the agent in the workspace."
+        ),
     )
     id: str = Field(
         description="The ID of the agent. Used to identify the agent in the workspace."
