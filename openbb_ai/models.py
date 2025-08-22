@@ -629,7 +629,10 @@ class WorkspaceState(BaseModel):
 
 class AgentTool(BaseModel):
     """Tool that can be executed by an agent."""
-
+    
+    server_id: str | None = Field(
+        None, description="The ID of the server to execute the tool on"
+    )
     name: str = Field(description="The name of the tool.")
     url: str = Field(description="The URL of the tool.")
     endpoint: str | None = Field(
