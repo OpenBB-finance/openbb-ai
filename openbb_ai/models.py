@@ -657,9 +657,9 @@ class WorkspaceState(BaseModel):
         default=None,
         description="The UUID of the current dashboard. Used to identify the dashboard in the workspace.",  # noqa: E501
     )
-    dashboards_info: list[DashboardInfo] | None = Field(
+    current_dashboard_info: DashboardInfo | None = Field(
         default=None,
-        description="A list of dashboard information. Used to identify the dashboards in the workspace.",  # noqa: E501
+        description="Information about the current dashboard including its tabs and widgets.",  # noqa: E501
     )
 
 
