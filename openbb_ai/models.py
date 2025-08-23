@@ -662,8 +662,7 @@ class WorkspaceState(BaseModel):
         description="Information about the current dashboard including its tabs and widgets.",  # noqa: E501
     )
     current_page_context: str | None = Field(
-        default=None,
-        description="The name of the current page context."
+        default=None, description="The name of the current page context."
     )
 
 
