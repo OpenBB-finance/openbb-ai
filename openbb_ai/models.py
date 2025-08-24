@@ -671,6 +671,7 @@ WorkspaceOptions = Sequence[
         "widget-global-search",
         "workspace-generative-ui",
         "workspace-agent-orchestration",
+        "workspace-web-search",
     ]
 ]
 
