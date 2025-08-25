@@ -631,19 +631,26 @@ class AgentTool(BaseModel):
     """Tool that can be executed by an agent."""
     
     server_id: str | None = Field(
-        None, description="The ID of the server to execute the tool on"
+        None, 
+        description="The ID of the server to execute the tool on",
     )
     name: str = Field(description="The name of the tool.")
     url: str = Field(description="The URL of the tool.")
     endpoint: str | None = Field(
-        None, description="The direct REST endpoint of the tool."
+        None, 
+        description="The direct REST endpoint of the tool.",
     )
-    description: str | None = Field(None, description="The description of the tool.")
+    description: str | None = Field(
+        None, 
+        description="The description of the tool.",
+    )
     input_schema: dict[str, Any] | None = Field(
-        None, description="The input schema of the tool."
+        None, 
+        description="The input schema of the tool.",
     )
     auth_token: str | None = Field(
-        None, description="The authentication token for the tool."
+        None, 
+        description="The authentication token for the tool.",
     )
 
 
