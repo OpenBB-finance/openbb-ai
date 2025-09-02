@@ -1,7 +1,7 @@
 import json
 import uuid
 from enum import Enum
-from typing import Annotated, Any, AsyncGenerator, Callable, Literal
+from typing import Annotated, Any, AsyncGenerator, Callable, Literal, Sequence
 from uuid import UUID, uuid4
 
 import xxhash
@@ -455,6 +455,13 @@ class LlmClientMessage(BaseModel):
     content: str | LlmClientFunctionCall = Field(
         description="The content of the message or the result of a function call."
     )
+    agent_id: str | None = Field(
+        default=None,
+        description=(
+            "The ID of the agent that created the message. "
+            "If not provided, it will be set to the default agent ID."
+        ),
+    )
 
     @field_validator("content", mode="before", check_fields=False)
     def parse_content(cls, v):
@@ -616,15 +623,57 @@ class DashboardInfo(BaseModel):
     )
 
 
+class WorkspaceAgent(BaseModel):
+    holder_url: str | None = Field(
+        default=None,
+        description=(
+            "The URL of the agent holder. Used to display the agent in the workspace."
+        ),
+    )
+    id: str = Field(
+        description="The ID of the agent. Used to identify the agent in the workspace."
+    )
+    name: str = Field(
+        description="The name of the agent. Used to display the agent in the workspace."
+    )
+    description: str | None = Field(
+        default=None, description="A description of the agent."
+    )
+    features: dict[str, bool] = Field(
+        default_factory=dict,
+        description="A dictionary of features that the agent supports.",
+    )
+
+
 class WorkspaceState(BaseModel):
+    action_history: list[str] | None = Field(
+        default=None,
+        description="A list of actions taken in the workspace. Used to track the history of actions in the workspace.",  # noqa: E501
+    )
+    agents: list[WorkspaceAgent] | None = Field(
+        default=None, description="A list of agents in the workspace."
+    )
     current_dashboard_uuid: UUID | None = Field(
         default=None,
         description="The UUID of the current dashboard. Used to identify the dashboard in the workspace.",  # noqa: E501
     )
-    dashboards_info: list[DashboardInfo] | None = Field(
+    current_dashboard_info: DashboardInfo | None = Field(
         default=None,
-        description="A list of dashboard information. Used to identify the dashboards in the workspace.",  # noqa: E501
+        description="Information about the current dashboard including its tabs and widgets.",  # noqa: E501
     )
+    current_page_context: str | None = Field(
+        default=None, description="The name of the current page context."
+    )
+
+
+WorkspaceOptions = Sequence[
+    Literal[
+        "widget-global-search",
+        "workspace-generative-ui",
+        "workspace-agent-orchestration",
+        "workspace-web-search",
+    ]
+]
 
 
 class AgentTool(BaseModel):
@@ -684,6 +733,10 @@ class QueryRequest(BaseModel):
     workspace_state: WorkspaceState | None = Field(
         default=None,
         description="Context of the workspace, with data about current state of the workspace.",  # noqa: E501
+    )
+    workspace_options: WorkspaceOptions = Field(
+        default=[],
+        description="A list of options to modify the behavior of the query. ",
     )
     tools: list[AgentTool] | None = Field(
         default=None,
@@ -772,6 +825,7 @@ class FunctionCallSSEData(BaseModel):
         "get_params_options",
         "add_widget_to_dashboard",
         "update_widget_in_dashboard",
+        "assign_tasks_to_agents",
         "execute_agent_tool",
     ]
     input_arguments: dict
