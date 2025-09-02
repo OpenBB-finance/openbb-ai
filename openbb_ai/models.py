@@ -674,6 +674,8 @@ WorkspaceOptions = Sequence[
         "workspace-web-search",
     ]
 ]
+
+
 class AgentTool(BaseModel):
     """Tool that can be executed by an agent."""
 
@@ -735,6 +737,7 @@ class QueryRequest(BaseModel):
     workspace_options: WorkspaceOptions = Field(
         default=[],
         description="A list of options to modify the behavior of the query. ",
+    )
     tools: list[AgentTool] | None = Field(
         default=None,
         description="Tools that can be used to execute the request.",
