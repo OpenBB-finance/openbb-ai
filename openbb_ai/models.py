@@ -674,6 +674,31 @@ WorkspaceOptions = Sequence[
         "workspace-web-search",
     ]
 ]
+class AgentTool(BaseModel):
+    """Tool that can be executed by an agent."""
+
+    server_id: str | None = Field(
+        None,
+        description="The ID of the server to execute the tool on",
+    )
+    name: str = Field(description="The name of the tool.")
+    url: str = Field(description="The URL of the tool.")
+    endpoint: str | None = Field(
+        None,
+        description="The direct REST endpoint of the tool.",
+    )
+    description: str | None = Field(
+        None,
+        description="The description of the tool.",
+    )
+    input_schema: dict[str, Any] | None = Field(
+        None,
+        description="The input schema of the tool.",
+    )
+    auth_token: str | None = Field(
+        None,
+        description="The authentication token for the tool.",
+    )
 
 
 class QueryRequest(BaseModel):
@@ -710,6 +735,9 @@ class QueryRequest(BaseModel):
     workspace_options: WorkspaceOptions = Field(
         default=[],
         description="A list of options to modify the behavior of the query. ",
+    tools: list[AgentTool] | None = Field(
+        default=None,
+        description="Tools that can be used to execute the request.",
     )
 
     @field_validator("messages", mode="before", check_fields=False)
@@ -795,6 +823,7 @@ class FunctionCallSSEData(BaseModel):
         "add_widget_to_dashboard",
         "update_widget_in_dashboard",
         "assign_tasks_to_agents",
+        "execute_agent_tool",
     ]
     input_arguments: dict
     extra_state: dict | None = Field(
