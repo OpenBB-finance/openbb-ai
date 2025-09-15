@@ -1,7 +1,7 @@
 import json
 import uuid
 from enum import Enum
-from typing import Annotated, Any, AsyncGenerator, Callable, Literal, Sequence
+from typing import Annotated, Any, AsyncGenerator, Callable, Literal
 from uuid import UUID, uuid4
 
 import xxhash
@@ -666,16 +666,6 @@ class WorkspaceState(BaseModel):
     )
 
 
-WorkspaceOptions = Sequence[
-    Literal[
-        "widget-global-search",
-        "workspace-generative-ui",
-        "workspace-agent-orchestration",
-        "workspace-web-search",
-    ]
-]
-
-
 class AgentTool(BaseModel):
     """Tool that can be executed by an agent."""
 
@@ -734,7 +724,7 @@ class QueryRequest(BaseModel):
         default=None,
         description="Context of the workspace, with data about current state of the workspace.",  # noqa: E501
     )
-    workspace_options: WorkspaceOptions = Field(
+    workspace_options: list[str] | None = Field(
         default=[],
         description="A list of options to modify the behavior of the query. ",
     )
