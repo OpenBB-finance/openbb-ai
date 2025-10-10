@@ -115,12 +115,12 @@ class RawObjectDataFormat(BaseModel):
     chart_params: ChartParameters | None = None
 
     @model_validator(mode="after")
-    def validate_chart_params(cls, values):
-        if values.parse_as == "chart" and not values.chart_params:
+    def validate_chart_params(self):
+        if self.parse_as == "chart" and not self.chart_params:
             raise ValueError("chart_params is required when parse_as is 'chart'")
-        if values.parse_as != "chart" and values.chart_params:
+        if self.parse_as != "chart" and self.chart_params:
             raise ValueError("chart_params is only allowed when parse_as is 'chart'")
-        return values
+        return self
 
 
 class PdfDataFormat(BaseModel):
@@ -275,14 +275,13 @@ class OptionsEndpointParam(BaseModel):
     )
 
     @model_validator(mode="after")
-    @classmethod
-    def validate_type_given_inherit_value_from(cls, data: Any):
+    def validate_type_given_inherit_value_from(self):
         # We set the type of the options parameter to the type of the user
         # parameter that it inherits from if inherit_value_from is set.
-        if data.type is None and data.inherit_value_from is not None:
-            data.type = data.inherit_value_from
+        if self.type is None and self.inherit_value_from is not None:
+            self.type = self.inherit_value_from
             raise ValueError("Type must be set if inherit_value_from is not set.")
-        return data
+        return self
 
 
 class WidgetParam(BaseModel):
@@ -387,34 +386,31 @@ class Widget(BaseModel):
         return data
 
     @model_validator(mode="after")
-    @classmethod
-    def check_params_are_unique(cls, data: Any):
-        param_names = [p.name for p in data.params]
+    def check_params_are_unique(self):
+        param_names = [p.name for p in self.params]
         if len(param_names) != len(set(param_names)):
             raise ValidationError("Parameter names must be unique.")
-        return data
+        return self
 
     @model_validator(mode="after")
-    @classmethod
-    def check_only_one_split_param_on_citation(cls, data: Any):
+    def check_only_one_split_param_on_citation(self):
         is_split_param_on_citation_set = False
-        for widget_param in data.params:
+        for widget_param in self.params:
             if widget_param.split_param_on_citation:
                 if is_split_param_on_citation_set:
                     raise ValidationError(
                         "Only one parameter can be split on citation."
                     )
                 is_split_param_on_citation_set = True
-        return data
+        return self
 
     @model_validator(mode="after")
-    @classmethod
-    def handle_inherit_value_from_options_params(cls, data: Any):
-        for widget_param in data.params:
+    def handle_inherit_value_from_options_params(self):
+        for widget_param in self.params:
             if widget_param.get_options:
                 for options_param in widget_param.options_params:
                     if options_param.inherit_value_from not in [
-                        p.name for p in data.params
+                        p.name for p in self.params
                     ]:
                         raise ValidationError(
                             f"Parameter {options_param.inherit_value_from} not found in options, but {widget_param.name}'s options endpoint depends on it."  # noqa: E501
@@ -423,11 +419,11 @@ class Widget(BaseModel):
                         # Find the referenced param and set the type to match
                         referenced_param = next(
                             p
-                            for p in data.params
+                            for p in self.params
                             if p.name == options_param.inherit_value_from
                         )
                         options_param.type = referenced_param.type
-        return data
+        return self
 
 
 class WidgetCollection(BaseModel):
@@ -775,12 +771,12 @@ class ClientArtifact(BaseModel):
     chart_params: ChartParameters | None = None
 
     @model_validator(mode="after")
-    def check_chart_params(cls, values):
-        if values.type == "chart" and not values.chart_params:
+    def check_chart_params(self):
+        if self.type == "chart" and not self.chart_params:
             raise ValueError("chart_params is required for type 'chart'")
-        if values.type != "chart" and values.chart_params:
+        if self.type != "chart" and self.chart_params:
             raise ValueError("chart_params is only allowed for type 'chart'")
-        return values
+        return self
 
 
 class BaseSSE(BaseModel):
