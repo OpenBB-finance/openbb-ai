@@ -14,6 +14,11 @@ dependencies = [
     "xxhash (>=3.5.0,<4.0.0)"
 ]
 
+[project.optional-dependencies]
+pydantic_ui = [
+    "pydantic-ai-slim[ui]>=1.12.0",
+]
+
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

@@ -30,6 +30,8 @@ def reasoning_step(
     message: str,
     event_type: Literal["INFO", "WARNING", "ERROR"] = "INFO",
     details: dict[str, Any] | str | None = None,
+    artifacts: list[ClientArtifact] | None = None,
+    hidden: bool = False,
 ) -> StatusUpdateSSE:
     """Create a reasoning step (also known as a status update) SSE.
 
@@ -48,6 +50,12 @@ def reasoning_step(
     details: dict[str, Any] | str | None
         Additional details to display.
         Default is None.
+    artifacts: list[ClientArtifact] | None
+        Artifacts (tables, charts) to display in the reasoning section.
+        Default is None.
+    hidden: bool
+        Whether to hide the message text (but still show artifacts).
+        Default is False.
 
     Returns
     -------
@@ -59,6 +67,8 @@ def reasoning_step(
             eventType=event_type,
             message=message,
             details=[details] if details else [],
+            artifacts=artifacts,
+            hidden=hidden,
         )
     )
 

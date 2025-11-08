@@ -29,6 +29,13 @@ To use the OpenBB Custom Agent SDK, you need to install the package:
 pip install openbb-ai
 ```
 
+Install the optional UI adapter dependencies only when you need to run
+Pydantic AI agents behind OpenBB Workspace:
+
+```bash
+pip install "openbb-ai[pydantic_ui]"
+```
+
 Your agent must consist of two endpoints:
 
 1. A `query` endpoint. This is the main endpoint that will be called by the OpenBB Workspace. It returns responses using [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events) (SSEs).
@@ -83,6 +90,36 @@ async def stream(request: QueryRequest):
         
     return EventSourceResponse(execution_loop())
 ```
+
+### [Pydantic AI Adapter](https://ai.pydantic.dev/ui/overview/)
+
+To run a Pydantic AI agent behind OpenBB Workspace, use the `OpenBBAIAdapter`.
+The adapter transforms incoming `QueryRequest` payloads into a Pydantic AI run,
+exposes widgets as deferred tools, and streams OpenBB-native SSE events back to
+the UI.
+
+> The adapter lives in an optional `pydantic_ui` extra to avoid forcing additional
+> dependencies on every OpenBB AI install. Install it with
+> `pip install "openbb-ai[pydantic_ui]"` before importing from `openbb_ai.pydantic_ui`.
+
+```python
+from fastapi import FastAPI
+from pydantic_ai import Agent
+from openbb_ai.pydantic_ui import OpenBBAIAdapter
+
+agent = Agent("openai:gpt-5", instructions="Be concise and helpful.")
+app = FastAPI()
+
+@app.post("/query")
+async def query(request):
+    return await OpenBBAIAdapter.dispatch_request(request, agent=agent)
+```
+
+When the model calls a widget tool, the adapter emits a `copilotFunctionCall`
+event (via `get_widget_data`) and waits for the Workspace to return the widget
+data before resuming the run. Structured outputs are automatically converted to
+tables or charts, and widget tool usage produces citation events so the UI can
+reference the originating data source.
 
 
 ### `QueryRequest`
