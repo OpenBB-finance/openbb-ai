@@ -813,6 +813,7 @@ class FunctionCallSSEData(BaseModel):
         "update_widget_in_dashboard",
         "assign_tasks_to_agents",
         "execute_agent_tool",
+        "execute_sql_query"
     ]
     input_arguments: dict
     extra_state: dict | None = Field(
