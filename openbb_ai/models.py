@@ -350,6 +350,22 @@ class Widget(BaseModel):
     name: str = Field(description="Name of the widget.")
     description: str = Field(description="Description of the widget.")
     params: list[WidgetParam] = Field(description="List of parameters for the widget.")
+    source: str | None = Field(
+        default=None,
+        description="Data provider source for the widget.",
+    )
+    category: str | None = Field(
+        default=None,
+        description="Category classification for the widget.",
+    )
+    sub_category: str | None = Field(
+        default=None,
+        description="Sub-category classification for the widget.",
+    )
+    columns: list[str] | None = Field(
+        default=None,
+        description="Column names for table-based widgets.",
+    )
     metadata: dict[str, Any] = Field(
         default_factory=dict,
         description="Metadata for the widget, must not overlap with current_params.",
