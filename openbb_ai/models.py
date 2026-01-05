@@ -109,9 +109,12 @@ ChartParameters = (
 )
 
 
+ArtifactTypes = Literal["text", "table", "chart", "snowflake_query", "html"]
+
+
 class RawObjectDataFormat(BaseModel):
     data_type: Literal["object"] = "object"
-    parse_as: Literal["text", "table", "chart", "snowflake_query"] = "table"
+    parse_as: ArtifactTypes = "table"
     chart_params: ChartParameters | None = None
     query_data_source: dict[str, Any] | None = None
 
@@ -790,7 +793,7 @@ class FunctionCallResponse(BaseModel):
 class ClientArtifact(BaseModel):
     """A piece of output data that is returned to the client."""
 
-    type: Literal["text", "table", "chart", "snowflake_query"]
+    type: ArtifactTypes
     name: str
     description: str
     uuid: UUID = Field(default_factory=uuid.uuid4)
