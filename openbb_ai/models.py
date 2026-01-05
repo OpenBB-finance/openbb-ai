@@ -109,17 +109,31 @@ ChartParameters = (
 )
 
 
+ArtifactTypes = Literal["text", "table", "chart", "snowflake_query", "html"]
+
+
 class RawObjectDataFormat(BaseModel):
     data_type: Literal["object"] = "object"
-    parse_as: Literal["text", "table", "chart"] = "table"
+    parse_as: ArtifactTypes = "table"
     chart_params: ChartParameters | None = None
+    query_data_source: dict[str, Any] | None = None
 
     @model_validator(mode="after")
-    def validate_chart_params(self):
+    def check_extra_fields_based_on_type(self):
         if self.parse_as == "chart" and not self.chart_params:
             raise ValueError("chart_params is required when parse_as is 'chart'")
         if self.parse_as != "chart" and self.chart_params:
             raise ValueError("chart_params is only allowed when parse_as is 'chart'")
+        if self.parse_as == "snowflake_query":
+            if not isinstance(self.query_data_source, dict):
+                raise ValueError(
+                    "query_data_source must be a dict when parse_as is 'snowflake_query'"  # noqa: E501
+                )
+            required_keys = {"origin", "id", "widget_uuid"}
+            if not required_keys.issubset(self.query_data_source.keys()):
+                raise ValueError(
+                    f"query_data_source must contain the keys: {required_keys} when parse_as is 'snowflake_query'"  # noqa: E501
+                )
         return self
 
 
@@ -779,19 +793,31 @@ class FunctionCallResponse(BaseModel):
 class ClientArtifact(BaseModel):
     """A piece of output data that is returned to the client."""
 
-    type: Literal["text", "table", "chart"]
+    type: ArtifactTypes
     name: str
     description: str
     uuid: UUID = Field(default_factory=uuid.uuid4)
     content: str | list[dict]
     chart_params: ChartParameters | None = None
+    query_data_source: dict[str, Any] | None = None
 
     @model_validator(mode="after")
-    def check_chart_params(self):
+    def check_extra_fields_based_on_type(self):
         if self.type == "chart" and not self.chart_params:
             raise ValueError("chart_params is required for type 'chart'")
         if self.type != "chart" and self.chart_params:
             raise ValueError("chart_params is only allowed for type 'chart'")
+        if self.type == "snowflake_query":
+            if not isinstance(self.query_data_source, dict):
+                raise ValueError(
+                    "query_data_source must be a dict for type 'snowflake_query'"
+                )
+
+            required_keys = {"origin", "id", "widget_uuid"}
+            if not required_keys.issubset(self.query_data_source.keys()):
+                raise ValueError(
+                    f"query_data_source must contain the keys: {required_keys} for type 'snowflake_query'"  # noqa: E501
+                )
         return self
 
 
