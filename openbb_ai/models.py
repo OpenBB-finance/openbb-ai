@@ -301,7 +301,15 @@ class OptionsEndpointParam(BaseModel):
 class WidgetParam(BaseModel):
     name: str = Field(description="Name of the parameter.")
     type: Literal[
-        "string", "text", "number", "integer", "boolean", "date", "ticker", "endpoint"
+        "string",
+        "text",
+        "number",
+        "integer",
+        "boolean",
+        "date",
+        "ticker",
+        "endpoint",
+        "tabs",
     ] = Field(description="Type of the parameter.")
     description: str = Field(description="Description of the parameter.")
     default_value: Any | None = Field(
