@@ -330,6 +330,10 @@ class WidgetParam(BaseModel):
         default_factory=list,
         description="A list of parameters to pass to the options endpoint.",
     )
+    language: str | None = Field(
+        default=None,
+        description="Programming language for code execution params (e.g., 'python')",
+    )
 
     @model_validator(mode="before")
     @classmethod
