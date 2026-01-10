@@ -109,7 +109,14 @@ ChartParameters = (
 )
 
 
-ArtifactTypes = Literal["text", "table", "chart", "snowflake_query", "html"]
+ArtifactTypes = Literal[
+    "text",
+    "table",
+    "chart",
+    "snowflake_query",
+    "snowflake_python",
+    "html",
+]
 
 
 class RawObjectDataFormat(BaseModel):
