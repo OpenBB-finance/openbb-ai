@@ -871,6 +871,7 @@ class FunctionCallSSEData(BaseModel):
         "get_extra_widget_data",
         "get_params_options",
         "add_widget_to_dashboard",
+        "add_generative_widget",
         "update_widget_in_dashboard",
         "assign_tasks_to_agents",
         "execute_agent_tool",
