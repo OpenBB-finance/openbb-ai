@@ -34,7 +34,6 @@ Your agent must consist of two endpoints:
 1. A `query` endpoint. This is the main endpoint that will be called by the OpenBB Workspace. It returns responses using [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events) (SSEs).
 2. An `agents.json` endpoint. This is the endpoint that will be called by the OpenBB Workspace to retrieve the agent's definition, and is what allows it to be added to the OpenBB Workspace.
 
-
 All helper functions return Server-Sent Event (SSE) messages that should be streamed back to the OpenBB Workspace from your agent's execution loop. For example, using FastAPI with `EventSourceResponse` from `sse_starlette`:
 
 ```python
@@ -77,13 +76,12 @@ async def stream(request: QueryRequest):
             # Your agent's logic lives here
             yield reasoning_step("Starting agent", event_type="INFO")
             yield message_chunk("Hello, world!")
-        
+
         async for event in event_generator():
             yield event.model_dump()
-        
+
     return EventSourceResponse(execution_loop())
 ```
-
 
 ### `QueryRequest`
 
@@ -99,6 +97,7 @@ definitions, context, URLs, and any other state will be included in each
 with all necessary data provided upfront.
 
 Key fields:
+
 - `messages`: List of messages to submit to the agent. Supports both chat (`LlmClientMessage`) and function call result (`LlmClientFunctionCallResultMessage`) messages.
 - `widgets`: Optional `WidgetCollection` organizing widgets into `primary`, `secondary`, and `extra` groups.
 - `context`: Optional additional context items (`RawContext`) to supplement processing. Yielded `table` and `chart` artifacts are automatically added to this list by OpenBB Workspace.
@@ -117,6 +116,7 @@ yield message_chunk("Hello, world!").model_dump()
 ```
 
 ### `reasoning_step`
+
 OpenBB Workspace allows you to return "reasoning steps" (sometimes referred to
 as "thought steps" or even "status updates") from your custom agent to the
 front-end, at any point in the agent's execution. This is often useful for
@@ -231,6 +231,7 @@ yield chart(
 ```
 
 ### Widget Priority
+
 Custom agents receive three widget types via the `QueryRequest.widgets` field:
 
 - **Primary widgets**: Explicitly added by the user to the context
@@ -311,12 +312,13 @@ You can also see the parameter information of each widget in the `params` field
 of the `Widget` object.
 
 ## Details
+
 This section contains more specific technical details about how the various
 components work together.
 
 ### Architecture
 
-```
+```plaintext
 ┌─────────────────────┐                ┌───────────────────────────────────────────┐
 │                     │                │                                           │
 │                     │                │               Agent                       │
@@ -350,6 +352,7 @@ The frontend communicates with the backend via REST requests to the `query`
 endpoint as defined in the `agent.json` schema.
 
 ### Function calling to OpenBB Workspace (to retrieve widget data)
+
 When retrieving data from widgets on the OpenBB Workspace, your custom agent must
 execute a **remote** function call, which gets interpreted by the OpenBB
 Workspace. This is in contrast to **local** function calling, which is executed locally by the agent within its own runtime / environment.
@@ -361,7 +364,7 @@ custom agent backend.
 
 Below is a timing diagram of how a remote function call to the OpenBB Workspace works:
 
-```
+```plaintext
 OpenBB Workspace                    Custom Agent
        │                                │
        │ 1. POST /query                 │
