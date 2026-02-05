@@ -929,12 +929,32 @@ class StatusUpdateSSE(BaseSSE):
     data: StatusUpdateSSEData
 
 
+class TokenUsageItem(BaseModel):
+    """Single item in token usage breakdown."""
+
+    label: str
+    value: int
+
+
+class TokenUsageData(BaseModel):
+    """Token usage breakdown for a copilot response."""
+
+    total: int
+    breakdown: list[TokenUsageItem]
+
+
+class TokenUsageSSE(BaseSSE):
+    event: Literal["copilotTokenUsage"] = "copilotTokenUsage"
+    data: TokenUsageData
+
+
 SSE = (
     MessageChunkSSE
     | MessageArtifactSSE
     | FunctionCallSSE
     | StatusUpdateSSE
     | CitationCollectionSSE
+    | TokenUsageSSE
 )
 
 
