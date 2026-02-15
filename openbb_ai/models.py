@@ -7,7 +7,6 @@ from uuid import UUID, uuid4
 import xxhash
 from pydantic import (
     BaseModel,
-    ConfigDict,
     Field,
     HttpUrl,
     ValidationError,
@@ -574,9 +573,9 @@ class ClientFunctionCallError(BaseModel):
 
 
 class ClientCommandResult(BaseModel):
-    model_config = ConfigDict(extra="allow")
     status: Literal["success", "error", "warning"]
     message: str | None = None
+    data: dict[str, Any] | None = None
 
 
 class LlmClientFunctionCallResultMessage(BaseModel):
