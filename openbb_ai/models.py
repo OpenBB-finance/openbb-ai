@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 import xxhash
 from pydantic import (
     BaseModel,
+    ConfigDict,
     Field,
     HttpUrl,
     ValidationError,
@@ -573,6 +574,7 @@ class ClientFunctionCallError(BaseModel):
 
 
 class ClientCommandResult(BaseModel):
+    model_config = ConfigDict(extra="allow")
     status: Literal["success", "error", "warning"]
     message: str | None = None
 
@@ -876,6 +878,7 @@ class FunctionCallSSEData(BaseModel):
         "assign_tasks_to_agents",
         "execute_agent_tool",
         "manage_navigation_bar",
+        "get_skill_content",
     ]
     input_arguments: dict
     extra_state: dict | None = Field(
