@@ -575,6 +575,7 @@ class ClientFunctionCallError(BaseModel):
 class ClientCommandResult(BaseModel):
     status: Literal["success", "error", "warning"]
     message: str | None = None
+    data: dict[str, Any] | None = None
 
 
 class LlmClientFunctionCallResultMessage(BaseModel):
@@ -876,6 +877,7 @@ class FunctionCallSSEData(BaseModel):
         "assign_tasks_to_agents",
         "execute_agent_tool",
         "manage_navigation_bar",
+        "get_skill_content",
     ]
     input_arguments: dict
     extra_state: dict | None = Field(
