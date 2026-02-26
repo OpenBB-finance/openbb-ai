@@ -326,6 +326,10 @@ class WidgetParam(BaseModel):
         default=None,
         description="Current value of the parameter. Must not be set for 'extra' widgets.",  # noqa: E501
     )
+    executed_value: Any | None = Field(
+        default=None,
+        description="Last successfully executed value of the parameter, if available.",
+    )
     multi_select: bool = Field(
         default=False,
         description="Set True to allow multiple values for the parameter.",
