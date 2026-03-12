@@ -778,6 +778,11 @@ class QueryRequest(BaseModel):
         default=None,
         description="Tools that can be used to execute the request.",
     )
+    extra_state: dict[str, Any] | None = Field(
+        default=None,
+        description="Any additional information, "
+        "session state, or metadata of the conversation.",
+    )
 
     @field_validator("messages", mode="before", check_fields=False)
     def check_messages_not_empty(cls, value):

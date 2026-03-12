@@ -1,6 +1,11 @@
 import uuid
 
-from openbb_ai.models import Citation, CitationHighlightBoundingBox, SourceInfo
+from openbb_ai.models import (
+    Citation,
+    CitationHighlightBoundingBox,
+    RoleEnum,
+    SourceInfo,
+)
 
 
 def test_citation_eq():
@@ -72,3 +77,22 @@ def test_citation_eq():
 
     # Different type
     assert citation_1 != "not a citation"
+
+
+def test_query_request_extra_state():
+    from openbb_ai.models import LlmClientMessage, QueryRequest
+
+    # Create a simple message to satisfy the non-empty messages requirement
+    msg = LlmClientMessage(role=RoleEnum.human, content="Test message")
+
+    # Instantiate QueryRequest with extra_state
+    req = QueryRequest(
+        messages=[msg], extra_state={"session_id": "123", "custom_flag": True}
+    )
+
+    # Assert extra_state is correctly populated
+    assert req.extra_state == {"session_id": "123", "custom_flag": True}
+
+    # Assert extra_state defaults to None
+    req_default = QueryRequest(messages=[msg])
+    assert req_default.extra_state is None
