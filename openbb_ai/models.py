@@ -161,7 +161,7 @@ class SpreadsheetDataFormat(BaseModel):
 
 
 class PlaintextDataFormat(BaseModel):
-    data_type: Literal["txt", "md"]
+    data_type: Literal["txt", "md", "html"]
     parse_as: Literal["text"] = "text"
     filename: str
 
