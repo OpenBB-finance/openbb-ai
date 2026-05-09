@@ -774,9 +774,9 @@ class QueryRequest(BaseModel):
         default=None,
         description="Context of the workspace, with data about current state of the workspace.",  # noqa: E501
     )
-    workspace_options: list[str] | None = Field(
-        default=[],
-        description="A list of options to modify the behavior of the query. ",
+    workspace_options: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Workspace option values keyed by option id.",
     )
     tools: list[AgentTool] | None = Field(
         default=None,
