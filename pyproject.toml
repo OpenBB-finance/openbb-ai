@@ -1,6 +1,6 @@
 [project]
 name = "openbb-ai"
-version = "2.0.1"
+version = "2.0.2"
 description = "An SDK for building agents compatible with OpenBB Workspace"
 authors = [
     { name = "OpenBB Team", email = "hello@openbb.finance" },
@@ -26,7 +26,7 @@ include = ["py.typed"]
 mypy = "^1.15.0"
 ruff = "^0.11.10"
 pre-commit = "^4.2.0"
-pytest = "^8.3.5"
+pytest = "9.0.3"
 
 [tool.ruff.lint]
 select = [
