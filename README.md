@@ -9,6 +9,7 @@ For some example agents that demonstrate the full usage of the SDK, see the
 ## Features
 
 - [Streaming Conversations](#message_chunk)
+- [Follow-up Prompt Suggestions](#prompt_suggestions)
 - [Reasoning steps / status updates](#reasoning_step)
 - [Retrieve widget data from OpenBB Workspace](#get_widget_data)
 - [Citations](#cite-and-citations)
@@ -133,6 +134,18 @@ yield reasoning_step(
     message="Processing data",
     event_type="INFO",
     details={"step": 1},
+).model_dump()
+```
+
+### `prompt_suggestions`
+
+Send follow-up prompt suggestions to OpenBB Workspace after an agent response.
+
+```python
+from openbb_ai.helpers import prompt_suggestions
+
+yield prompt_suggestions(
+    ["Summarize the main takeaways", "Compare revenue and margin trends"]
 ).model_dump()
 ```
 

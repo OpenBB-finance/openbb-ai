@@ -17,6 +17,8 @@ from .models import (
     MessageChunkSSE,
     MessageChunkSSEData,
     PieChartParameters,
+    PromptSuggestionsSSE,
+    PromptSuggestionsSSEData,
     ScatterChartParameters,
     SourceInfo,
     StatusUpdateSSE,
@@ -82,6 +84,25 @@ def message_chunk(text: str) -> MessageChunkSSE:
         The message chunk SSE.
     """
     return MessageChunkSSE(data=MessageChunkSSEData(delta=text))
+
+
+def prompt_suggestions(suggestions: list[str]) -> PromptSuggestionsSSE:
+    """Create a prompt suggestions SSE.
+
+    This SSE is used to send follow-up prompt suggestions to OpenBB Workspace
+    after an agent response.
+
+    Parameters
+    ----------
+    suggestions: list[str]
+        Prompt suggestions to display to the user.
+
+    Returns
+    -------
+    PromptSuggestionsSSE
+        The prompt suggestions SSE.
+    """
+    return PromptSuggestionsSSE(data=PromptSuggestionsSSEData(suggestions=suggestions))
 
 
 def get_widget_data(widget_requests: list[WidgetRequest]) -> FunctionCallSSE:

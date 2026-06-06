@@ -1,6 +1,32 @@
 import uuid
 
-from openbb_ai.models import Citation, CitationHighlightBoundingBox, SourceInfo
+from openbb_ai.models import (
+    AgentFeatureOption,
+    Citation,
+    CitationHighlightBoundingBox,
+    SourceInfo,
+    WorkspaceAgent,
+)
+
+
+def test_workspace_agent_supports_feature_option_metadata():
+    agent = WorkspaceAgent(
+        id="openbb_ada",
+        name="OpenBB Copilot",
+        features={
+            "streaming": True,
+            "prompt-suggestions": {
+                "label": "Follow-up Suggestions",
+                "default": True,
+                "description": "Show follow-up prompt suggestions after each response.",
+            },
+        },
+    )
+
+    feature = agent.features["prompt-suggestions"]
+    assert isinstance(feature, AgentFeatureOption)
+    assert feature.label == "Follow-up Suggestions"
+    assert feature.default is True
 
 
 def test_citation_eq():

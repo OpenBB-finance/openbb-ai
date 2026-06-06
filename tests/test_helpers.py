@@ -1,5 +1,10 @@
-from openbb_ai.helpers import chart, reasoning_step, table
-from openbb_ai.models import ClientArtifact, MessageArtifactSSE, StatusUpdateSSE
+from openbb_ai.helpers import chart, prompt_suggestions, reasoning_step, table
+from openbb_ai.models import (
+    ClientArtifact,
+    MessageArtifactSSE,
+    PromptSuggestionsSSE,
+    StatusUpdateSSE,
+)
 
 
 def test_reasoning_step():
@@ -17,6 +22,14 @@ def test_reasoning_step():
     result = reasoning_step("Hello, world!")
     assert isinstance(result, StatusUpdateSSE)
     assert result.data.details == []
+
+
+def test_prompt_suggestions():
+    result = prompt_suggestions(["Show revenue growth", "Compare margin trends"])
+
+    assert isinstance(result, PromptSuggestionsSSE)
+    assert result.event == "copilotPromptSuggestions"
+    assert result.data.suggestions == ["Show revenue growth", "Compare margin trends"]
 
 
 def test_chart_line():
