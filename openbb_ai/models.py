@@ -943,15 +943,15 @@ class StatusUpdateSSEData(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def exclude_fields(cls, values):
-        # Exclude these fields from being in the "details" field.  (since this
-        # pollutes the JSON output)
+        # Exclude these fields from being in the "details" field.
+        # (since this pollutes the JSON output)
         _exclude_fields = EXCLUDE_STATUS_UPDATE_DETAILS_FIELDS
         if details := values.get("details"):
             if isinstance(details, list):
                 for detail in details:
                     if isinstance(detail, dict):
                         for key in list(detail.keys()):
-                            if key.lower() in _exclude_fields:
+                            if str(key).lower() in _exclude_fields:
                                 detail.pop(key, None)
         return values
 
