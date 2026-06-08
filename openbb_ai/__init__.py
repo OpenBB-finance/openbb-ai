@@ -7,5 +7,8 @@ from .helpers import prompt_suggestions as prompt_suggestions
 from .helpers import reasoning_step as reasoning_step
 from .helpers import table as table
 from .models import QueryRequest as QueryRequest
+from .models import TokenUsageData as TokenUsageData
+from .models import TokenUsageItem as TokenUsageItem
+from .models import TokenUsageSSE as TokenUsageSSE
 from .models import Widget as Widget
 from .models import WidgetRequest as WidgetRequest
