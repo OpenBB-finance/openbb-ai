@@ -3,6 +3,7 @@ from .helpers import citations as citations
 from .helpers import cite as cite
 from .helpers import get_widget_data as get_widget_data
 from .helpers import message_chunk as message_chunk
+from .helpers import prompt_suggestions as prompt_suggestions
 from .helpers import reasoning_step as reasoning_step
 from .helpers import table as table
 from .models import QueryRequest as QueryRequest

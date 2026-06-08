@@ -673,6 +673,23 @@ class DashboardInfo(BaseModel):
     )
 
 
+class AgentFeatureSelectOption(BaseModel):
+    label: str
+    value: str
+
+
+class AgentFeatureOption(BaseModel):
+    label: str
+    type: Literal["toggle", "text", "select"] | None = None
+    default: bool | str | None = None
+    description: str | None = None
+    placeholder: str | None = None
+    options: list[AgentFeatureSelectOption] | None = None
+
+
+AgentFeature = bool | AgentFeatureOption
+
+
 class WorkspaceAgent(BaseModel):
     holder_url: str | None = Field(
         default=None,
@@ -689,7 +706,7 @@ class WorkspaceAgent(BaseModel):
     description: str | None = Field(
         default=None, description="A description of the agent."
     )
-    features: dict[str, bool] = Field(
+    features: dict[str, AgentFeature] = Field(
         default_factory=dict,
         description="A dictionary of features that the agent supports.",
     )
@@ -865,6 +882,15 @@ class MessageChunkSSE(BaseSSE):
     data: MessageChunkSSEData
 
 
+class PromptSuggestionsSSEData(BaseModel):
+    suggestions: list[str]
+
+
+class PromptSuggestionsSSE(BaseSSE):
+    event: Literal["copilotPromptSuggestions"] = "copilotPromptSuggestions"
+    data: PromptSuggestionsSSEData
+
+
 class MessageArtifactSSE(BaseSSE):
     event: Literal["copilotMessageArtifact"] = "copilotMessageArtifact"
     data: ClientArtifact
@@ -917,15 +943,15 @@ class StatusUpdateSSEData(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def exclude_fields(cls, values):
-        # Exclude these fields from being in the "details" field.  (since this
-        # pollutes the JSON output)
+        # Exclude these fields from being in the "details" field.
+        # (since this pollutes the JSON output)
         _exclude_fields = EXCLUDE_STATUS_UPDATE_DETAILS_FIELDS
         if details := values.get("details"):
             if isinstance(details, list):
                 for detail in details:
                     if isinstance(detail, dict):
                         for key in list(detail.keys()):
-                            if key.lower() in _exclude_fields:
+                            if str(key).lower() in _exclude_fields:
                                 detail.pop(key, None)
         return values
 
@@ -937,6 +963,7 @@ class StatusUpdateSSE(BaseSSE):
 
 SSE = (
     MessageChunkSSE
+    | PromptSuggestionsSSE
     | MessageArtifactSSE
     | FunctionCallSSE
     | StatusUpdateSSE
