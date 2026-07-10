@@ -1,6 +1,13 @@
-from openbb_ai.helpers import chart, prompt_suggestions, reasoning_step, table
+from openbb_ai.helpers import (
+    chart,
+    conversation_summary,
+    prompt_suggestions,
+    reasoning_step,
+    table,
+)
 from openbb_ai.models import (
     ClientArtifact,
+    ConversationSummarySSE,
     MessageArtifactSSE,
     PromptSuggestionsSSE,
     StatusUpdateSSE,
@@ -30,6 +37,25 @@ def test_prompt_suggestions():
     assert isinstance(result, PromptSuggestionsSSE)
     assert result.event == "copilotPromptSuggestions"
     assert result.data.suggestions == ["Show revenue growth", "Compare margin trends"]
+
+
+def test_conversation_summary():
+    result = conversation_summary(
+        content="The user analyzed AAPL revenue trends.",
+        covered_through_message_id="msg-42",
+        source_hash="abc123",
+    )
+
+    assert isinstance(result, ConversationSummarySSE)
+    assert result.event == "copilotConversationSummary"
+    assert result.data.content == "The user analyzed AAPL revenue trends."
+    assert result.data.covered_through_message_id == "msg-42"
+    assert result.data.source_hash == "abc123"
+    assert result.data.version == 1
+
+    dumped = result.model_dump()
+    assert dumped["event"] == "copilotConversationSummary"
+    assert '"covered_through_message_id":"msg-42"' in dumped["data"]
 
 
 def test_chart_line():

@@ -8,6 +8,8 @@ from .models import (
     CitationCollection,
     CitationCollectionSSE,
     ClientArtifact,
+    ConversationSummarySSE,
+    ConversationSummarySSEData,
     DataSourceRequest,
     DonutChartParameters,
     FunctionCallSSE,
@@ -103,6 +105,46 @@ def prompt_suggestions(suggestions: list[str]) -> PromptSuggestionsSSE:
         The prompt suggestions SSE.
     """
     return PromptSuggestionsSSE(data=PromptSuggestionsSSEData(suggestions=suggestions))
+
+
+def conversation_summary(
+    content: str,
+    covered_through_message_id: str,
+    source_hash: str,
+    version: int = 1,
+) -> ConversationSummarySSE:
+    """Create a conversation summary SSE.
+
+    This SSE is used to send a generated summary of earlier conversation
+    messages to the client, which persists it as a summary message at the
+    compaction boundary and includes it in subsequent requests.
+
+    Parameters
+    ----------
+    content: str
+        The summary text of the covered messages.
+    covered_through_message_id: str
+        The message_id of the last message covered by this summary.
+    source_hash: str
+        Hash of the canonical projection of the covered non-summary messages
+        (see `conversation_source_hash`).
+    version: int
+        Schema version of the summary message.
+        Default is 1.
+
+    Returns
+    -------
+    ConversationSummarySSE
+        The conversation summary SSE.
+    """
+    return ConversationSummarySSE(
+        data=ConversationSummarySSEData(
+            content=content,
+            covered_through_message_id=covered_through_message_id,
+            source_hash=source_hash,
+            version=version,
+        )
+    )
 
 
 def get_widget_data(widget_requests: list[WidgetRequest]) -> FunctionCallSSE:
