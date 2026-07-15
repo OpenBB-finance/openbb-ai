@@ -51,7 +51,6 @@ def test_conversation_summary():
     assert result.data.content == "The user analyzed AAPL revenue trends."
     assert result.data.covered_through_message_id == "msg-42"
     assert result.data.source_hash == "abc123"
-    assert result.data.version == 1
 
     dumped = result.model_dump()
     assert dumped["event"] == "copilotConversationSummary"

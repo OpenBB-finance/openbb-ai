@@ -55,7 +55,6 @@ def test_query_request_parses_summary_message():
                     "content": "Earlier turns summarized.",
                     "covered_through_message_id": "m1",
                     "source_hash": "deadbeef",
-                    "version": 1,
                 },
                 {"role": "human", "content": "next question"},
             ]
@@ -67,7 +66,6 @@ def test_query_request_parses_summary_message():
     assert isinstance(request.messages[1], LlmClientSummaryMessage)
     assert request.messages[1].covered_through_message_id == "m1"
     assert request.messages[1].source_hash == "deadbeef"
-    assert request.messages[1].version == 1
     assert isinstance(request.messages[2], LlmClientMessage)
     assert request.messages[2].message_id is None
 

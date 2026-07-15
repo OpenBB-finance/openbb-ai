@@ -111,7 +111,6 @@ def conversation_summary(
     content: str,
     covered_through_message_id: str,
     source_hash: str,
-    version: int = 1,
 ) -> ConversationSummarySSE:
     """Create a conversation summary SSE.
 
@@ -128,10 +127,6 @@ def conversation_summary(
     source_hash: str
         Hash of the canonical projection of the covered non-summary messages
         (see `conversation_source_hash`).
-    version: int
-        Schema version of the summary message.
-        Default is 1.
-
     Returns
     -------
     ConversationSummarySSE
@@ -142,7 +137,6 @@ def conversation_summary(
             content=content,
             covered_through_message_id=covered_through_message_id,
             source_hash=source_hash,
-            version=version,
         )
     )
 

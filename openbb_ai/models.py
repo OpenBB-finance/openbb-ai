@@ -558,9 +558,6 @@ class LlmClientSummaryMessage(BaseModel):
             "messages, used to detect stale summaries after history edits."
         )
     )
-    version: int = Field(
-        default=1, description="Schema version of the summary message."
-    )
 
 
 class SingleFileReference(BaseModel):
@@ -1058,9 +1055,6 @@ class ConversationSummarySSEData(BaseModel):
             "Hash of the canonical projection of the covered non-summary "
             "messages (see conversation_source_hash)."
         )
-    )
-    version: int = Field(
-        default=1, description="Schema version of the summary message."
     )
 
 
