@@ -11,4 +11,3 @@ from .models import LlmClientSummaryMessage as LlmClientSummaryMessage
 from .models import QueryRequest as QueryRequest
 from .models import Widget as Widget
 from .models import WidgetRequest as WidgetRequest
-from .models import conversation_source_hash as conversation_source_hash

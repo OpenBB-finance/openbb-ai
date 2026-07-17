@@ -110,7 +110,6 @@ def prompt_suggestions(suggestions: list[str]) -> PromptSuggestionsSSE:
 def conversation_summary(
     content: str,
     covered_through_message_id: str,
-    source_hash: str,
 ) -> ConversationSummarySSE:
     """Create a conversation summary SSE.
 
@@ -124,9 +123,6 @@ def conversation_summary(
         The summary text of the covered messages.
     covered_through_message_id: str
         The message_id of the last message covered by this summary.
-    source_hash: str
-        Hash of the canonical projection of the covered non-summary messages
-        (see `conversation_source_hash`).
     Returns
     -------
     ConversationSummarySSE
@@ -136,7 +132,6 @@ def conversation_summary(
         data=ConversationSummarySSEData(
             content=content,
             covered_through_message_id=covered_through_message_id,
-            source_hash=source_hash,
         )
     )
 

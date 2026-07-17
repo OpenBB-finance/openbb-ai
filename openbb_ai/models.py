@@ -539,9 +539,7 @@ class LlmClientSummaryMessage(BaseModel):
     persisted by the client at the compaction boundary.
 
     Agents should use the summary in place of the covered messages when
-    constructing the model prompt, after validating ``source_hash`` against
-    the canonical projection of the covered messages (see
-    ``conversation_source_hash``).
+    constructing the model prompt.
     """
 
     role: Literal["summary"] = "summary"
@@ -550,12 +548,6 @@ class LlmClientSummaryMessage(BaseModel):
         description=(
             "The message_id of the last message covered by this summary. "
             "All non-summary messages up to and including it are covered."
-        )
-    )
-    source_hash: str = Field(
-        description=(
-            "Hash of the canonical projection of the covered non-summary "
-            "messages, used to detect stale summaries after history edits."
         )
     )
 
@@ -652,53 +644,6 @@ class RawContext(BaseModel):
         default=None,
         description="Additional widget metadata (eg. the selected ticker, etc)",
     )
-
-
-LlmMessage = (
-    LlmClientFunctionCallResultMessage | LlmClientMessage | LlmClientSummaryMessage
-)
-
-
-def conversation_source_hash(messages: "list[LlmMessage]") -> str:
-    """Hash the canonical projection of a sequence of conversation messages.
-
-    Used to validate that a ``LlmClientSummaryMessage`` still covers the
-    messages it was generated from. The projection deliberately excludes
-    volatile fields that change between requests without changing the
-    conversation itself: tool-result ``data`` payloads (file URLs are
-    renewed by clients) and ``extra_state`` (mutated on every round trip).
-    Summary messages never feed the hash.
-    """
-    hasher = xxhash.xxh64()
-    for message in messages:
-        if isinstance(message, LlmClientSummaryMessage):
-            continue
-        if isinstance(message, LlmClientFunctionCallResultMessage):
-            body: dict[str, Any] = {
-                "role": "tool",
-                "function": message.function,
-                "input_arguments": message.input_arguments,
-                "message_id": message.message_id,
-            }
-        else:
-            content: Any = message.content
-            if isinstance(content, LlmClientFunctionCall):
-                content = {
-                    "function": content.function,
-                    "input_arguments": content.input_arguments,
-                }
-            body = {
-                "role": message.role.value,
-                "content": content,
-                "message_id": message.message_id,
-            }
-        hasher.update(
-            json.dumps(body, sort_keys=True, default=str, ensure_ascii=False).encode(
-                "utf-8"
-            )
-        )
-        hasher.update(b"\x1e")
-    return hasher.hexdigest()
 
 
 class DataSourceRequestPayload(BaseModel):
@@ -1049,12 +994,6 @@ class ConversationSummarySSEData(BaseModel):
     content: str = Field(description="The summary text of the covered messages.")
     covered_through_message_id: str = Field(
         description="The message_id of the last message covered by this summary."
-    )
-    source_hash: str = Field(
-        description=(
-            "Hash of the canonical projection of the covered non-summary "
-            "messages (see conversation_source_hash)."
-        )
     )
 
 
