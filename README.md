@@ -157,19 +157,12 @@ The Workspace persists it as a summary message at the compaction boundary and
 includes it in subsequent requests, so the agent can prompt the model with the
 summary instead of re-reading (or re-summarizing) the covered messages.
 
-Validate a received summary by recomputing the hash of the covered messages
-with `conversation_source_hash` and comparing it to the summary's
-`source_hash`; on mismatch the summary is stale and should be regenerated.
-
 ```python
 from openbb_ai.helpers import conversation_summary
-from openbb_ai.models import conversation_source_hash
 
-covered = messages[: boundary_index + 1]
 yield conversation_summary(
     content="Summary of the earlier conversation...",
-    covered_through_message_id=covered[-1].message_id,
-    source_hash=conversation_source_hash(covered),
+    covered_through_message_id=messages[boundary_index].message_id,
 ).model_dump()
 ```
 
