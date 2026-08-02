@@ -908,6 +908,7 @@ class FunctionCallSSEData(BaseModel):
         "execute_agent_tool",
         "manage_navigation_bar",
         "get_skill_content",
+        "save_skill",
     ]
     input_arguments: dict
     extra_state: dict | None = Field(
