@@ -52,6 +52,7 @@ from openbb_ai import (
 
 app = FastAPI()
 
+
 @app.get("/agents.json")
 async def agents_json():
     return JSONResponse(
@@ -60,7 +61,9 @@ async def agents_json():
                 "name": "My Agent",
                 "description": "This is my agent",
                 "image": f"{AGENT_BASE_URL}/my-agent/logo.png",
-                "endpoints": {"query": f"{AGENT_BASE_URL}/query"},  # must match the query endpoint below
+                "endpoints": {
+                    "query": f"{AGENT_BASE_URL}/query"
+                },  # must match the query endpoint below
                 "features": {
                     "streaming": True,  # must be True
                     "widget-dashboard-select": True,  # Enable access to priority widgets
@@ -69,6 +72,7 @@ async def agents_json():
             }
         }
     )
+
 
 @app.get("/query")
 async def stream(request: QueryRequest):
