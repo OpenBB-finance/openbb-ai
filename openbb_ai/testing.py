@@ -70,6 +70,15 @@ class CopilotResponse:
                 self.events.append(
                     CopilotEvent(event_type=event_name, content=data_dict_)
                 )
+            elif event_type == "copilotConversationSummary" and line.startswith(
+                "data:"
+            ):
+                event_name = "copilotConversationSummary"
+                data_payload = line.split("data:")[1].strip()
+                data_dict_ = json.loads(data_payload)
+                self.events.append(
+                    CopilotEvent(event_type=event_name, content=data_dict_)
+                )
 
     @property
     def text(self) -> str:
@@ -99,6 +108,14 @@ class CopilotResponse:
             event
             for event in self.events
             if event.event_type == "copilotPromptSuggestions"
+        ]
+
+    @property
+    def conversation_summaries(self) -> list[CopilotEvent]:
+        return [
+            event
+            for event in self.events
+            if event.event_type == "copilotConversationSummary"
         ]
 
     def __iter__(self):

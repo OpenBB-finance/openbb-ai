@@ -11,6 +11,7 @@ For some example agents that demonstrate the full usage of the SDK, see the
 - [Streaming Conversations](#message_chunk)
 - [Follow-up Prompt Suggestions](#prompt_suggestions)
 - [Reasoning steps / status updates](#reasoning_step)
+- [Conversation summaries / history compaction](#conversation_summary)
 - [Retrieve widget data from OpenBB Workspace](#get_widget_data)
 - [Citations](#cite-and-citations)
 - [Display tables](#table)
@@ -103,7 +104,7 @@ with all necessary data provided upfront.
 
 Key fields:
 
-- `messages`: List of messages to submit to the agent. Supports both chat (`LlmClientMessage`) and function call result (`LlmClientFunctionCallResultMessage`) messages.
+- `messages`: List of messages to submit to the agent. Supports chat (`LlmClientMessage`), function call result (`LlmClientFunctionCallResultMessage`), and conversation summary (`LlmClientSummaryMessage`) messages. Chat and function call result messages may carry an optional client-assigned `message_id`, which summary messages reference via `covered_through_message_id`.
 - `widgets`: Optional `WidgetCollection` organizing widgets into `primary`, `secondary`, and `extra` groups.
 - `context`: Optional additional context items (`RawContext`) to supplement processing. Yielded `table` and `chart` artifacts are automatically added to this list by OpenBB Workspace.
 - `urls`: Optional list of URLs (up to 4) to retrieve and include as context.
@@ -150,6 +151,22 @@ from openbb_ai.helpers import prompt_suggestions
 
 yield prompt_suggestions(
     ["Summarize the main takeaways", "Compare revenue and margin trends"]
+).model_dump()
+```
+
+### `conversation_summary`
+
+Send a generated summary of earlier conversation messages to OpenBB Workspace.
+The Workspace persists it as a summary message at the compaction boundary and
+includes it in subsequent requests, so the agent can prompt the model with the
+summary instead of re-reading (or re-summarizing) the covered messages.
+
+```python
+from openbb_ai.helpers import conversation_summary
+
+yield conversation_summary(
+    content="Summary of the earlier conversation...",
+    covered_through_message_id=messages[boundary_index].message_id,
 ).model_dump()
 ```
 

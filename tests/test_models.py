@@ -4,9 +4,42 @@ from openbb_ai.models import (
     AgentFeatureOption,
     Citation,
     CitationHighlightBoundingBox,
+    LlmClientMessage,
+    LlmClientSummaryMessage,
+    QueryRequest,
     SourceInfo,
     WorkspaceAgent,
 )
+
+
+def test_query_request_parses_summary_message():
+    request = QueryRequest.model_validate(
+        {
+            "messages": [
+                {"role": "human", "content": "hello", "message_id": "m1"},
+                {
+                    "role": "summary",
+                    "content": "Earlier turns summarized.",
+                    "covered_through_message_id": "m1",
+                },
+                {"role": "human", "content": "next question"},
+            ]
+        }
+    )
+
+    assert isinstance(request.messages[0], LlmClientMessage)
+    assert request.messages[0].message_id == "m1"
+    assert isinstance(request.messages[1], LlmClientSummaryMessage)
+    assert request.messages[1].covered_through_message_id == "m1"
+    assert isinstance(request.messages[2], LlmClientMessage)
+    assert request.messages[2].message_id is None
+
+
+def test_message_id_is_optional_and_round_trips():
+    message = LlmClientMessage(role="ai", content="hi")
+    assert message.message_id is None
+    dumped = LlmClientMessage(role="ai", content="hi", message_id="m9").model_dump()
+    assert dumped["message_id"] == "m9"
 
 
 def test_workspace_agent_supports_feature_option_metadata():
